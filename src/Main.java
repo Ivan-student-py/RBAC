@@ -82,6 +82,25 @@ public class Main {
             System.err.println("Ошибка: " + e.getMessage());
         }
 
+        System.out.println("\n=== Тестирование RoleAssignment ===");
+
+        try {
+            User user = User.validate("test_user", "Test User", "test@example.com");
+            Role role = new Role("Viewer", "Read-only access");
+            AssignmentMetadata meta = AssignmentMetadata.now("admin", "Testing");
+
+            PermanentAssignment permAssign = new PermanentAssignment(user, role, meta);
+            System.out.println("Permanent Assignment:\n" + permAssign.summary());
+
+            String futureTime = "2026-12-31 23:00";
+            TemporaryAssignment tempAssign = new TemporaryAssignment(user, role, meta, futureTime, false);
+            System.out.println("\nTemporary Assignment:\n" + tempAssign.summary());
+            System.out.println("Time remaining: " + tempAssign.getTimeRemaining() + " minutes");
+
+        } catch (Exception e) {
+            System.err.println("Ошибка: " + e.getMessage());
+        }
+
         System.out.println("=== Тестирование завершено ===");
     }
 }
