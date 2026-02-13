@@ -70,6 +70,18 @@ public class Main {
             System.err.println("Ошибка: " + e.getMessage());
         }
 
+        System.out.println("\n=== Тестирование AssignmentMetadata ===");
+
+        try {
+            AssignmentMetadata meta1 = AssignmentMetadata.now("admin", "Initial setup");
+            System.out.println(meta1.format());
+
+            AssignmentMetadata meta2 = AssignmentMetadata.now("moderator", null);
+            System.out.println(meta2.format());
+        } catch (Exception e) {
+            System.err.println("Ошибка: " + e.getMessage());
+        }
+
         System.out.println("=== Тестирование завершено ===");
     }
 }
