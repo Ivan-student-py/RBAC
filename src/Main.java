@@ -27,6 +27,29 @@ public class Main {
             System.out.println("Поймана ошибка (короткий username): " + e.getMessage());
         }
 
+        System.out.println("\n=== Тестирование Permission ===");
+
+        try {
+            Permission perm = new Permission("read", "USERS", "Read user data");
+            System.out.println("Успех: " + perm.format());
+            System.out.println("  Проверка matches: " + perm.matches("READ", "users"));
+        } catch (IllegalArgumentException e) {
+            System.err.println("Ошибка: " + e.getMessage());
+        }
+
+        try {
+            new Permission("write", "orders", "");
+        } catch (IllegalArgumentException e) {
+            System.out.println("Поймана ошибка (пустое описание): " + e.getMessage());
+        }
+
+        try {
+            Permission perm2 = new Permission(" Create ", "PRODUCTS", "Create new product");
+            System.out.println("Нормализация: " + perm2.format());
+        } catch (Exception e) {
+            System.err.println("Неопознанная ошибка: " + e.getMessage());
+        }
+
         System.out.println("=== Тестирование завершено ===");
     }
 }
