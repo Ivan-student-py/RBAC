@@ -50,6 +50,26 @@ public class Main {
             System.err.println("Неопознанная ошибка: " + e.getMessage());
         }
 
+        System.out.println("\n=== Тестирование Role ===");
+
+        try {
+            Permission readUsers = new Permission("read", "users", "Read user data");
+            Permission writeUsers = new Permission("write", "users", "Modify user data");
+
+            Role adminRole = new Role("Administrator", "Full system access");
+            adminRole.addPermission(readUsers);
+            adminRole.addPermission(writeUsers);
+
+            System.out.println(adminRole.format());
+            System.out.println("Has READ on users? " + adminRole.hasPermission("READ", "users"));
+            System.out.println("Has DELETE on orders? " + adminRole.hasPermission("DELETE", "orders"));
+
+            Role sameRole = new Role("Moderator", "Content moderation");
+            System.out.println("Admin equals new Role? " + adminRole.equals(sameRole));
+        } catch (Exception e) {
+            System.err.println("Ошибка: " + e.getMessage());
+        }
+
         System.out.println("=== Тестирование завершено ===");
     }
 }
