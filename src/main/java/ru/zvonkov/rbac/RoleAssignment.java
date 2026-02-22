@@ -1,3 +1,5 @@
+package main.java;
+
 public interface RoleAssignment {
     String assignmentId();
     User user();

@@ -1,4 +1,4 @@
-import java.util.Locale;
+package main.java;
 
 public record Permission(String name, String resource, String description) {
     public Permission {

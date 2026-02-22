@@ -1,4 +1,6 @@
-public class PermanentAssignment extends AbstractRoleAssignment{
+package main.java;
+
+public class PermanentAssignment extends AbstractRoleAssignment {
     private boolean revoked = false;
     public PermanentAssignment(User user, Role role, AssignmentMetadata metadata) {
         super(user, role, metadata);

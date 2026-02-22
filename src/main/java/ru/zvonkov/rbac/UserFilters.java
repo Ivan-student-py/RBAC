@@ -1,3 +1,5 @@
+package main.java;
+
 public final class UserFilters {
     private UserFilters(){}
 

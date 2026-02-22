@@ -1,3 +1,5 @@
+package main.java;
+
 @FunctionalInterface
 public interface RoleFilter {
     boolean test(Role role);

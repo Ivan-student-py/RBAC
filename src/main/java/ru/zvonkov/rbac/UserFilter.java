@@ -1,4 +1,4 @@
-import java.util.function.Predicate;
+package main.java;
 
 @FunctionalInterface
 public interface UserFilter {
