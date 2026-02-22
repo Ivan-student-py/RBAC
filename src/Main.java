@@ -136,6 +136,46 @@ public class Main {
 
         System.out.println("=== Тестирование UserFilter завершено ===");
 
+        System.out.println("\n=== Тестирование RoleFilter ===");
+
+        try {
+            Permission readUsers = new Permission("read", "users", "Read user data");
+            Permission writeUsers = new Permission("write", "users", "Modify user data");
+            Role admin = new Role("Administrator", "Full access");
+            admin.addPermission(readUsers);
+            admin.addPermission(writeUsers);
+
+            Role viewer = new Role("Viewer", "Read-only");
+            viewer.addPermission(readUsers);
+
+            RoleFilter byName = RoleFilters.byName("Administrator");
+            System.out.println("byName('Administrator'): " + byName.test(admin));
+
+            RoleFilter byNameContains = RoleFilters.byNameContains("VIEW");
+            System.out.println("byNameContains('VIEW'): " + byNameContains.test(viewer));
+
+            RoleFilter hasWrite = RoleFilters.hasPermission(writeUsers);
+            System.out.println("hasPermission(write): " + hasWrite.test(admin));
+            System.out.println("hasPermission(write) for Viewer: " + hasWrite.test(viewer));
+
+            RoleFilter hasReadUsers = RoleFilters.hasPermission("READ", "users");
+            System.out.println("hasPermission('READ', 'users'): " + hasReadUsers.test(admin));
+
+            RoleFilter atLeast2 = RoleFilters.hasAtLeastNPermissions(2);
+            System.out.println("hasAtLeastNPermissions(2) for Admin: " + atLeast2.test(admin));
+            System.out.println("hasAtLeastNPermissions(2) for Viewer: " + atLeast2.test(viewer));
+
+            // Тест: комбинирование
+            RoleFilter combined = byName.and(hasWrite);
+            System.out.println("Комбинированный фильтр: " + combined.test(admin));
+
+        } catch (Exception e) {
+            System.err.println("Ошибка в тестах RoleFilter: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        System.out.println("=== Тестирование RoleFilter завершено ===");
+
         System.out.println("=== Тестирование завершено ===");
     }
 }
