@@ -176,6 +176,47 @@ public class Main {
 
         System.out.println("=== Тестирование RoleFilter завершено ===");
 
+        System.out.println("\n=== Тестирование AssignmentFilter ===");
+
+        try {
+            User user = User.validate("test_user", "Test User", "test@example.com");
+            Role role = new Role("Viewer", "Read-only access");
+            Permission readPerm = new Permission("read", "data", "Read data");
+            role.addPermission(readPerm);
+            AssignmentMetadata meta = AssignmentMetadata.now("admin", "Testing");
+
+            PermanentAssignment permAssign = new PermanentAssignment(user, role, meta);
+            TemporaryAssignment tempAssign = new TemporaryAssignment(
+                    user, role, meta, "2026-12-31 23:59", false
+            );
+
+            AssignmentFilter byUser = AssignmentFilters.byUser(user);
+            System.out.println("byUser: " + byUser.test(permAssign));
+
+            AssignmentFilter byUsername = AssignmentFilters.byUsername("test_user");
+            System.out.println("byUsername: " + byUsername.test(tempAssign));
+
+            AssignmentFilter active = AssignmentFilters.activeOnly();
+            System.out.println("activeOnly for Permanent: " + active.test(permAssign));
+            System.out.println("activeOnly for Temporary: " + active.test(tempAssign));
+
+            AssignmentFilter permanent = AssignmentFilters.byType("PERMANENT");
+            System.out.println("byType('PERMANENT'): " + permanent.test(permAssign));
+
+            AssignmentFilter assignedBy = AssignmentFilters.assignedBy("admin");
+            System.out.println("assignedBy('admin'): " + assignedBy.test(permAssign));
+
+            AssignmentFilter expiring = AssignmentFilters.expiringBefore("2030-01-01 00:00");
+            System.out.println("expiringBefore(2030): " + expiring.test(tempAssign)); // true
+            System.out.println("expiringBefore(2025): " + expiring.test(permAssign)); // false (permanent)
+
+        } catch (Exception e) {
+            System.err.println("Ошибка в тестах AssignmentFilter: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        System.out.println("=== Тестирование AssignmentFilter завершено ===");
+
         System.out.println("=== Тестирование завершено ===");
     }
 }
