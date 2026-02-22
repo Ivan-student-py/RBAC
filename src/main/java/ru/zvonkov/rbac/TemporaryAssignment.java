@@ -1,4 +1,4 @@
-package main.java;
+package ru.zvonkov.rbac;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

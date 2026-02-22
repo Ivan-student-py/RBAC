@@ -1,4 +1,4 @@
-package main.java;
+package ru.zvonkov.rbac;
 
 public record Permission(String name, String resource, String description) {
     public Permission {

@@ -1,4 +1,4 @@
-package main.java;
+package ru.zvonkov.rbac;
 
 public class Main {
     public static void main(String[] args) {

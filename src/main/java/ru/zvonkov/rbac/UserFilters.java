@@ -1,4 +1,4 @@
-package main.java;
+package ru.zvonkov.rbac;
 
 public final class UserFilters {
     private UserFilters(){}

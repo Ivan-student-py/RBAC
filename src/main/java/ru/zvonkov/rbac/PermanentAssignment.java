@@ -1,4 +1,4 @@
-package main.java;
+package ru.zvonkov.rbac;
 
 public class PermanentAssignment extends AbstractRoleAssignment {
     private boolean revoked = false;

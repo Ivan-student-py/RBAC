@@ -1,4 +1,4 @@
-package main.java;
+package ru.zvonkov.rbac;
 
 @FunctionalInterface
 public interface AssignmentFilter {
