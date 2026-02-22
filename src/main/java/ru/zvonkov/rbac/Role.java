@@ -50,6 +50,13 @@ public class Role {
                 .anyMatch(p -> p.matches(name, resource));
     }
 
+    public boolean removePermission(Permission permission) {
+        if (permission == null) {
+            return false;
+        }
+        return permissions.remove(permission);
+    }
+
     public String format() {
         StringBuilder sb = new StringBuilder();
         sb.append("Role: ").append(name).append("\n");
