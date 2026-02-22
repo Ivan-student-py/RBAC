@@ -217,6 +217,49 @@ public class Main {
 
         System.out.println("=== Тестирование AssignmentFilter завершено ===");
 
+        System.out.println("\n=== Тестирование сортировки ===");
+
+        try {
+            User alice = User.validate("alice", "Alice A", "alice@example.com");
+            User bob = User.validate("bob", "Bob B", "bob@example.com");
+            User charlie = User.validate("charlie", "Charlie C", "charlie@example.com");
+            java.util.List<User> users = java.util.Arrays.asList(charlie, alice, bob);
+
+            users.sort(UserSorters.byUsername());
+            System.out.println("Пользователи по username:");
+            users.forEach(u -> System.out.println("   - " + u.username()));
+
+            Role admin = new Role("Admin", "Full access");
+            Role viewer = new Role("Viewer", "Read-only");
+            Role editor = new Role("Editor", "Edit content");
+            editor.addPermission(new Permission("write", "docs", "Write docs"));
+            java.util.List<Role> roles = java.util.Arrays.asList(editor, admin, viewer);
+
+            roles.sort(RoleSorters.byPermissionCount());
+            System.out.println("Роли по количеству прав:");
+            roles.forEach(r -> System.out.println("   - " + r.name() + " (" + r.getPermissions().size() + ")"));
+
+            AssignmentMetadata meta1 = AssignmentMetadata.now("admin", "Test");
+            AssignmentMetadata meta2 = AssignmentMetadata.now("admin", "Test");
+
+            String time1 = "2025-01-01 10:00";
+            String time2 = "2025-01-01 09:00";
+
+            PermanentAssignment assign1 = new PermanentAssignment(alice, admin, meta1);
+            PermanentAssignment assign2 = new PermanentAssignment(bob, viewer, meta2);
+
+            java.util.List<RoleAssignment> assignments = java.util.Arrays.asList(assign1, assign2);
+            assignments.sort(AssignmentSorters.byUsername());
+            System.out.println("Назначения по имени пользователя:");
+            assignments.forEach(a -> System.out.println("   - " + a.user().username()));
+
+        } catch (Exception e) {
+            System.err.println("Ошибка в тестах сортировки: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        System.out.println("=== Тестирование сортировки завершено ===");
+
         System.out.println("=== Тестирование завершено ===");
     }
 }
