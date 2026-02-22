@@ -101,6 +101,41 @@ public class Main {
             System.err.println("Ошибка: " + e.getMessage());
         }
 
+        System.out.println("\n=== Тестирование UserFilter ===");
+
+        try {
+            User alice = User.validate("alice_dev", "Alice Johnson", "alice@example.com");
+            User bob = User.validate("bob_smith", "Bob Smith", "bob@company.org");
+
+            UserFilter byExactUsername = UserFilters.byUsername("alice_dev");
+            System.out.println("byUsername('alice_dev') для Alice: " + byExactUsername.test(alice));
+            System.out.println("byUsername('alice_dev') для Bob: " + byExactUsername.test(bob));
+
+            UserFilter byUsernameContains = UserFilters.byUsernameContains("ALICE");
+            System.out.println("byUsernameContains('ALICE'): " + byUsernameContains.test(alice));
+
+            UserFilter byEmail = UserFilters.byEmail("alice@example.com");
+            System.out.println("byEmail('alice@example.com'): " + byEmail.test(alice));
+
+            UserFilter byDomain = UserFilters.byEmailDomain("@company.org");
+            System.out.println("byEmailDomain('@company.org') для Bob: " + byDomain.test(bob));
+
+            UserFilter byFullName = UserFilters.byFullNameContains("john");
+            System.out.println("byFullNameContains('john'): " + byFullName.test(alice));
+
+            UserFilter combined = byExactUsername.and(byEmail);
+            System.out.println("Комбинированный фильтр (username AND email): " + combined.test(alice));
+
+            UserFilter nonExistent = UserFilters.byUsername("charlie");
+            System.out.println("Фильтр по несуществующему username: " + nonExistent.test(alice));
+
+        } catch (Exception e) {
+            System.err.println("Ошибка в тестах UserFilter: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        System.out.println("=== Тестирование UserFilter завершено ===");
+
         System.out.println("=== Тестирование завершено ===");
     }
 }
