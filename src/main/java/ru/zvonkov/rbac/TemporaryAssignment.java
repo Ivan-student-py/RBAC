@@ -46,6 +46,13 @@ public class TemporaryAssignment extends AbstractRoleAssignment {
         this.expiresAt = newExpire.format(FORMATTER);
     }
 
+    public void extendMinutesUntil(String newExpirationDate) {
+        if (newExpirationDate == null || newExpirationDate.trim().isEmpty()) {
+            throw new IllegalArgumentException("New expiration date must not be null or empty");
+        }
+        this.expiresAt = newExpirationDate.trim();
+    }
+
     public long getTimeRemaining() {
         try {
             LocalDateTime expireTime = LocalDateTime.parse(expiresAt, FORMATTER);
