@@ -36,6 +36,7 @@ public class CommandRegistry {
         registerRoleSearch(parser);
 
         // === Команды управления назначениями ===
+        registerAssignRole(parser);
 
         // === Команды просмотра прав ===
     }
@@ -743,6 +744,85 @@ public class CommandRegistry {
                             role.getPermissions().size(),
                             role.id());
                 }
+            }
+        });
+    }
+
+    private static void registerAssignRole(CommandParser parser) {
+        parser.registerCommand("assign-role", "Назначить роль пользователю", (scanner, system) -> {
+            System.out.print("\nВведите username пользователя: ");
+            String username = scanner.nextLine().trim();
+            if (username.isEmpty()) {
+                System.out.println("Username не может быть пустым.");
+                return;
+            }
+
+            Optional<User> userOpt = system.getUserManager().findByUsername(username);
+            if (userOpt.isEmpty()) {
+                System.out.println("Пользователь '" + username + "' не найден.");
+                return;
+            }
+            User user = userOpt.get();
+
+            List<Role> roles = system.getRoleManager().findAll();
+            if (roles.isEmpty()) {
+                System.out.println("Нет доступных ролей для назначения.");
+                return;
+            }
+
+            System.out.println("\nДоступные роли:");
+            for (int i = 0; i < roles.size(); i++) {
+                System.out.printf("  %d. %s (%d прав)\n", i + 1, roles.get(i).name(), roles.get(i).getPermissions().size());
+            }
+
+            System.out.print("\nВыберите номер роли (1–" + roles.size() + "): ");
+            String roleInput = scanner.nextLine().trim();
+            try {
+                int roleIndex = Integer.parseInt(roleInput) - 1;
+                if (roleIndex < 0 || roleIndex >= roles.size()) {
+                    System.out.println("Неверный номер роли.");
+                    return;
+                }
+                Role selectedRole = roles.get(roleIndex);
+
+                System.out.println("\nТип назначения:");
+                System.out.println("1. Постоянное");
+                System.out.println("2. Временное");
+                System.out.print("Выберите тип (1 или 2): ");
+                String typeInput = scanner.nextLine().trim();
+                boolean isTemporary = "2".equals(typeInput);
+
+                String expiresAt = null;
+                if (isTemporary) {
+                    System.out.print("Введите дату истечения (формат: yyyy-MM-dd HH:mm): ");
+                    expiresAt = scanner.nextLine().trim();
+                    if (expiresAt.isEmpty()) {
+                        System.out.println("Дата истечения обязательна для временного назначения.");
+                        return;
+                    }
+                }
+
+                System.out.print("Введите причину назначения: ");
+                String reason = scanner.nextLine().trim();
+                if (reason.isEmpty()) {
+                    reason = "Без указания причины";
+                }
+
+                AssignmentMetadata meta = AssignmentMetadata.now(system.getCurrentUser(), reason);
+                RoleAssignment assignment;
+                if (isTemporary) {
+                    assignment = new TemporaryAssignment(user, selectedRole, meta, expiresAt, false);
+                } else {
+                    assignment = new PermanentAssignment(user, selectedRole, meta);
+                }
+
+                system.getAssignmentManager().add(assignment);
+                System.out.println("Роль '" + selectedRole.name() + "' успешно назначена пользователю '" + username + "'.");
+
+            } catch (NumberFormatException e) {
+                System.out.println("Введите корректный номер.");
+            } catch (IllegalArgumentException e) {
+                System.out.println("Ошибка при назначении: " + e.getMessage());
             }
         });
     }
