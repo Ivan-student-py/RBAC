@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 public class CommandRegistry {
     public static void registerAllCommands(CommandParser parser) {
@@ -18,6 +20,7 @@ public class CommandRegistry {
         // === Команды управления пользователями ===
         registerUserList(parser);
         registerUserCreate(parser);
+        registerUserView(parser);
 
 
         // === Команды управления ролями ===
@@ -112,6 +115,57 @@ public class CommandRegistry {
             } catch (Exception e) {
                 System.out.println("Неожиданная ошибка: " + e.getMessage());
             }
+        });
+    }
+
+    private static void registerUserView(CommandParser parser) {
+        parser.registerCommand("user-view", "Просмотр информации о пользователе", (scanner, system) -> {
+            System.out.print("\nВведите username пользователя: ");
+            String username = scanner.nextLine().trim();
+            if (username.isEmpty()) {
+                System.out.println("Username не может быть пустым.");
+                return;
+            }
+
+            Optional<User> userOpt = system.getUserManager().findByUsername(username);
+            if (userOpt.isEmpty()) {
+                System.out.println("Пользователь с username '" + username + "' не найден.");
+                return;
+            }
+
+            User user = userOpt.get();
+            System.out.println("\n=== Информация о пользователе ===");
+            System.out.println(user.format());
+
+            List<RoleAssignment> assignments = system.getAssignmentManager().findByUser(user);
+            if (assignments.isEmpty()) {
+                System.out.println("\nНет назначенных ролей.");
+            } else {
+                System.out.println("\nНазначенные роли:");
+                for (RoleAssignment assignment : assignments) {
+                    System.out.println("  - " + assignment.role().name() +
+                            " (" + (assignment.isActive() ? "активно" : "неактивно") + ")");
+                }
+            }
+
+            Set<Permission> permissions = system.getAssignmentManager().getUserPermissions(user);
+            if (permissions.isEmpty()) {
+                System.out.println("\nНет прав доступа.");
+            } else {
+                System.out.println("\nПрава доступа (всего: " + permissions.size() + "):");
+                Map<String, List<Permission>> byResource = new HashMap<>();
+                for (Permission p : permissions) {
+                    byResource.computeIfAbsent(p.resource(), k -> new ArrayList<>()).add(p);
+                }
+
+                for (Map.Entry<String, List<Permission>> entry : byResource.entrySet()) {
+                    System.out.println("  Ресурс: " + entry.getKey());
+                    for (Permission p : entry.getValue()) {
+                        System.out.println("    • " + p.name() + " — " + p.description());
+                    }
+                }
+            }
+            System.out.println("==================================");
         });
     }
 }
