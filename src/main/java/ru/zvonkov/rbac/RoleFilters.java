@@ -45,4 +45,11 @@ public final class RoleFilters {
         }
         return role -> role.getPermissions().size() >= n;
     }
+
+    public static RoleFilter minPermissions(int minCount) {
+        if (minCount < 0) {
+            throw new IllegalArgumentException("Минимальное количество прав не может быть отрицательным");
+        }
+        return role -> role.getPermissions().size() >= minCount;
+    }
 }

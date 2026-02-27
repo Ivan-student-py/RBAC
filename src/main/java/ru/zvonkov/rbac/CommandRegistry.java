@@ -33,6 +33,7 @@ public class CommandRegistry {
         registerRoleDelete(parser);
         registerRoleAddPermission(parser);
         registerRoleRemovePermission(parser);
+        registerRoleSearch(parser);
 
         // === Команды управления назначениями ===
 
@@ -664,6 +665,84 @@ public class CommandRegistry {
                 System.out.println("Введите корректный номер.");
             } catch (IllegalArgumentException e) {
                 System.out.println("Ошибка при удалении права: " + e.getMessage());
+            }
+        });
+    }
+
+    private static void registerRoleSearch(CommandParser parser) {
+        parser.registerCommand("role-search", "Поиск ролей по фильтрам", (scanner, system) -> {
+            System.out.println("\n=== Поиск ролей ===");
+            System.out.println("Выберите тип фильтра:");
+            System.out.println("1. По названию (содержит)");
+            System.out.println("2. По наличию конкретного права");
+            System.out.println("3. По минимальному количеству прав");
+            System.out.print("Введите номер фильтра (1–3): ");
+
+            String choice = scanner.nextLine().trim();
+            RoleFilter filter = null;
+
+            switch (choice) {
+                case "1":
+                    System.out.print("Введите подстроку для поиска в названии: ");
+                    String nameSubstr = scanner.nextLine().trim();
+                    if (!nameSubstr.isEmpty()) {
+                        filter = RoleFilters.byNameContains(nameSubstr);
+                    }
+                    break;
+
+                case "2":
+                    System.out.print("Введите имя права (например, READ): ");
+                    String permName = scanner.nextLine().trim();
+                    System.out.print("Введите ресурс (например, users): ");
+                    String resource = scanner.nextLine().trim();
+                    if (!permName.isEmpty() && !resource.isEmpty()) {
+                        filter = RoleFilters.hasPermission(permName, resource);
+                    } else {
+                        System.out.println("Оба поля должны быть заполнены.");
+                        return;
+                    }
+                    break;
+
+                case "3":
+                    System.out.print("Введите минимальное количество прав: ");
+                    String countStr = scanner.nextLine().trim();
+                    try {
+                        int minCount = Integer.parseInt(countStr);
+                        if (minCount >= 0) {
+                            filter = RoleFilters.minPermissions(minCount);
+                        } else {
+                            System.out.println("Минимальное количество не может быть отрицательным.");
+                            return;
+                        }
+                    } catch (NumberFormatException e) {
+                        System.out.println("Введите корректное число.");
+                        return;
+                    }
+                    break;
+
+                default:
+                    System.out.println("Неверный выбор.");
+                    return;
+            }
+
+            if (filter == null) {
+                System.out.println("Пустой запрос — поиск отменён.");
+                return;
+            }
+
+            List<Role> results = system.getRoleManager().findByFilter(filter);
+            if (results.isEmpty()) {
+                System.out.println("\nНет ролей, соответствующих фильтру.");
+            } else {
+                System.out.println("\nНайдено " + results.size() + " роль(ей):");
+                System.out.printf("%-25s | %-10s | %s%n", "Название роли", "Права", "ID");
+                System.out.println("-".repeat(65));
+                for (Role role : results) {
+                    System.out.printf("%-25s | %-10d | %s%n",
+                            role.name(),
+                            role.getPermissions().size(),
+                            role.id());
+                }
             }
         });
     }
