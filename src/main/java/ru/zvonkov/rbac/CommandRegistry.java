@@ -38,6 +38,7 @@ public class CommandRegistry {
         // === Команды управления назначениями ===
         registerAssignRole(parser);
         registerRevokeRole(parser);
+        registerAssignmentList(parser);
 
         // === Команды просмотра прав ===
     }
@@ -885,6 +886,33 @@ public class CommandRegistry {
             } catch (NumberFormatException e) {
                 System.out.println("Введите корректный номер.");
             }
+        });
+    }
+
+    private static void registerAssignmentList(CommandParser parser) {
+        parser.registerCommand("assignment-list", "Вывести список всех назначений", (scanner, system) -> {
+            System.out.println("\n=== Список всех назначений ===");
+            List<RoleAssignment> assignments = system.getAssignmentManager().findAll();
+            if (assignments.isEmpty()) {
+                System.out.println("Нет зарегистрированных назначений.");
+                return;
+            }
+
+            System.out.printf("%-15s | %-20s | %-12s | %-10s | %s%n",
+                    "Username", "Роль", "Тип", "Статус", "Назначено");
+            System.out.println("-".repeat(85));
+
+            for (RoleAssignment a : assignments) {
+                String username = a.user().username();
+                String roleName = a.role().name();
+                String type = (a instanceof PermanentAssignment) ? "Постоянное" : "Временное";
+                String status = a.isActive() ? "Активно" : "Неактивно";
+                String assignedAt = a.metadata().assignedAt();
+
+                System.out.printf("%-15s | %-20s | %-12s | %-10s | %s%n",
+                        username, roleName, type, status, assignedAt);
+            }
+            System.out.println("=".repeat(85));
         });
     }
 
