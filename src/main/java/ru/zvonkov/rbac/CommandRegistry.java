@@ -27,6 +27,7 @@ public class CommandRegistry {
 
         // === Команды управления ролями ===
         registerRoleList(parser);
+        registerRoleCreate(parser);
 
         // === Команды управления назначениями ===
 
@@ -357,6 +358,74 @@ public class CommandRegistry {
                         role.id());
             }
             System.out.println("=".repeat(65));
+        });
+    }
+
+    private static void registerRoleCreate(CommandParser parser) {
+        parser.registerCommand("role-create", "Создать новую роль", (scanner, system) -> {
+            System.out.println("\n=== Создание новой роли ===");
+
+            try {
+                // Запрос названия
+                System.out.print("Введите название роли: ");
+                String name = scanner.nextLine().trim();
+                if (name.isEmpty()) {
+                    System.out.println("Название роли не может быть пустым.");
+                    return;
+                }
+
+                // Запрос описания
+                System.out.print("Введите описание роли: ");
+                String description = scanner.nextLine().trim();
+                if (description.isEmpty()) {
+                    description = "Без описания";
+                }
+
+                // Создание роли
+                Role role = new Role(name, description);
+                System.out.println("Роль '" + name + "' создана.");
+
+                // Цикл добавления прав
+                while (true) {
+                    System.out.print("\nХотите добавить право? (да/нет): ");
+                    String addPerm = scanner.nextLine().trim().toLowerCase();
+                    if (!"да".equals(addPerm)) break;
+
+                    System.out.print("  Имя права (например, READ, WRITE): ");
+                    String permName = scanner.nextLine().trim();
+                    if (permName.isEmpty()) {
+                        System.out.println("    Имя права не может быть пустым.");
+                        continue;
+                    }
+
+                    System.out.print("  Ресурс (например, users, roles): ");
+                    String resource = scanner.nextLine().trim();
+                    if (resource.isEmpty()) {
+                        System.out.println("    Ресурс не может быть пустым.");
+                        continue;
+                    }
+
+                    System.out.print("  Описание права: ");
+                    String permDesc = scanner.nextLine().trim();
+                    if (permDesc.isEmpty()) {
+                        permDesc = "Без описания";
+                    }
+
+                    Permission permission = new Permission(permName, resource, permDesc);
+                    role.addPermission(permission);
+                    System.out.println("    Право добавлено: " + permission.format());
+                }
+
+                // Добавление роли в систему
+                system.getRoleManager().add(role);
+                System.out.println("\nРоль успешно сохранена в системе.");
+                System.out.println(role.format());
+
+            } catch (IllegalArgumentException e) {
+                System.out.println("Ошибка при создании роли: " + e.getMessage());
+            } catch (Exception e) {
+                System.out.println("Неожиданная ошибка: " + e.getMessage());
+            }
         });
     }
 
