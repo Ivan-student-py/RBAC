@@ -270,6 +270,35 @@ public class Main {
         RBACSystem system = new RBACSystem();
         system.initialize();
 
-        System.out.println("\n" + system.generateStatistics());
+        CommandParser parser = new CommandParser();
+        CommandRegistry.registerAllCommands(parser);
+
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("=== RBAC-система запущена ===");
+        System.out.println("Введите 'help' для списка команд или 'exit' для выхода.");
+
+        boolean running = true;
+        while (running) {
+            System.out.print("\n> ");
+            String input = scanner.nextLine().trim();
+
+            if (input.isEmpty()) continue;
+
+            String commandName = input.split("\\s+")[0].toLowerCase();
+
+            if ("exit".equals(commandName)) {
+                System.out.print("Вы уверены, что хотите выйти? (да/нет): ");
+                String confirm = scanner.nextLine().trim().toLowerCase();
+                if ("да".equals(confirm)) {
+                    running = false;
+                } else {
+                    System.out.println("Выход отменён.");
+                }
+            } else {
+                parser.parseAndExecute(input, scanner, system);
+            }
+        }
+
+        System.out.println("Выход из программы...");
     }
 }
