@@ -39,6 +39,7 @@ public class CommandRegistry {
         registerAssignRole(parser);
         registerRevokeRole(parser);
         registerAssignmentList(parser);
+        registerAssignmentListUser(parser);
 
         // === Команды просмотра прав ===
     }
@@ -913,6 +914,45 @@ public class CommandRegistry {
                         username, roleName, type, status, assignedAt);
             }
             System.out.println("=".repeat(85));
+        });
+    }
+
+    private static void registerAssignmentListUser(CommandParser parser) {
+        parser.registerCommand("assignment-list-user", "Назначения конкретного пользователя", (scanner, system) -> {
+            System.out.print("\nВведите username пользователя: ");
+            String username = scanner.nextLine().trim();
+            if (username.isEmpty()) {
+                System.out.println("Username не может быть пустым.");
+                return;
+            }
+
+            Optional<User> userOpt = system.getUserManager().findByUsername(username);
+            if (userOpt.isEmpty()) {
+                System.out.println("Пользователь '" + username + "' не найден.");
+                return;
+            }
+            User user = userOpt.get();
+
+            List<RoleAssignment> assignments = system.getAssignmentManager().findByUser(user);
+            if (assignments.isEmpty()) {
+                System.out.println("У пользователя '" + username + "' нет назначений.");
+                return;
+            }
+
+            System.out.println("\n=== Назначения пользователя '" + username + "' ===");
+            for (int i = 0; i < assignments.size(); i++) {
+                RoleAssignment a = assignments.get(i);
+                System.out.printf("\n%d. Роль: %s\n", i + 1, a.role().name());
+                System.out.println("   Тип: " + (a instanceof PermanentAssignment ? "Постоянное" : "Временное"));
+                System.out.println("   Статус: " + (a.isActive() ? "Активно" : "Неактивно"));
+                System.out.println("   Назначено: " + a.metadata().assignedAt());
+                System.out.println("   Причина: " + a.metadata().reason());
+
+                if (a instanceof TemporaryAssignment) {
+                    System.out.println("   Истекает: " + ((TemporaryAssignment) a).expiresAt());
+                }
+            }
+            System.out.println("=".repeat(50));
         });
     }
 

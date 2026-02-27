@@ -68,4 +68,7 @@ public class TemporaryAssignment extends AbstractRoleAssignment {
 
     public String getExpiresAt() { return expiresAt; }
     public boolean isAutoRenew() { return autoRenew; }
+    public String expiresAt() {
+        return expiresAt;
+    }
 }
