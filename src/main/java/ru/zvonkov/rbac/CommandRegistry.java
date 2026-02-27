@@ -30,6 +30,7 @@ public class CommandRegistry {
         registerRoleCreate(parser);
         registerRoleView(parser);
         registerRoleUpdate(parser);
+        registerRoleDelete(parser);
 
         // === Команды управления назначениями ===
 
@@ -511,6 +512,56 @@ public class CommandRegistry {
 
             } catch (Exception e) {
                 System.out.println("Ошибка при обновлении роли: " + e.getMessage());
+            }
+        });
+    }
+
+    private static void registerRoleDelete(CommandParser parser) {
+        parser.registerCommand("role-delete", "Удалить роль", (scanner, system) -> {
+            System.out.print("\nВведите название роли для удаления: ");
+            String roleName = scanner.nextLine().trim();
+            if (roleName.isEmpty()) {
+                System.out.println("Название роли не может быть пустым.");
+                return;
+            }
+
+            Optional<Role> roleOpt = system.getRoleManager().findByName(roleName);
+            if (roleOpt.isEmpty()) {
+                System.out.println("Роль с названием '" + roleName + "' не найдена.");
+                return;
+            }
+
+            Role role = roleOpt.get();
+            System.out.println("Вы собираетесь удалить роль:");
+            System.out.println("  Название: " + role.name());
+            System.out.println("  Описание: " + role.description());
+
+            List<RoleAssignment> assignments = system.getAssignmentManager().findByRole(role);
+            if (!assignments.isEmpty()) {
+                System.out.println("\nЭта роль назначена " + assignments.size() + " пользователю(ям):");
+                for (RoleAssignment a : assignments) {
+                    System.out.println("  • " + a.user().username() +
+                            " (" + (a.isActive() ? "активно" : "неактивно") + ")");
+                }
+                System.out.println("\nУдаление роли приведёт к потере этих назначений!");
+            }
+
+            System.out.print("\nПодтвердите удаление (введите \"да\"): ");
+            String confirm = scanner.nextLine().trim();
+            if (!"да".equals(confirm)) {
+                System.out.println("Удаление отменено.");
+                return;
+            }
+
+            try {
+                boolean removed = system.getRoleManager().remove(role);
+                if (removed) {
+                    System.out.println("Роль успешно удалена.");
+                } else {
+                    System.out.println("Не удалось удалить роль.");
+                }
+            } catch (Exception e) {
+                System.out.println("Ошибка при удалении: " + e.getMessage());
             }
         });
     }
