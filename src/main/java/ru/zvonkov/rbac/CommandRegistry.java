@@ -32,6 +32,7 @@ public class CommandRegistry {
         registerRoleUpdate(parser);
         registerRoleDelete(parser);
         registerRoleAddPermission(parser);
+        registerRoleRemovePermission(parser);
 
         // === Команды управления назначениями ===
 
@@ -612,6 +613,57 @@ public class CommandRegistry {
                 System.out.println("Ошибка при добавлении права: " + e.getMessage());
             } catch (Exception e) {
                 System.out.println("Неожиданная ошибка: " + e.getMessage());
+            }
+        });
+    }
+
+    private static void registerRoleRemovePermission(CommandParser parser) {
+        parser.registerCommand("role-remove-permission", "Удалить право из роли", (scanner, system) -> {
+            System.out.print("\nВведите название роли: ");
+            String roleName = scanner.nextLine().trim();
+            if (roleName.isEmpty()) {
+                System.out.println("Название роли не может быть пустым.");
+                return;
+            }
+
+            Optional<Role> roleOpt = system.getRoleManager().findByName(roleName);
+            if (roleOpt.isEmpty()) {
+                System.out.println("Роль с названием '" + roleName + "' не найдена.");
+                return;
+            }
+
+            Role role = roleOpt.get();
+            Set<Permission> permissions = role.getPermissions();
+            if (permissions.isEmpty()) {
+                System.out.println("У роли '" + roleName + "' нет прав для удаления.");
+                return;
+            }
+
+            List<Permission> permList = new ArrayList<>(permissions);
+            System.out.println("\nПрава роли '" + roleName + "':");
+            for (int i = 0; i < permList.size(); i++) {
+                System.out.printf("  %d. %s%n", i + 1, permList.get(i).format());
+            }
+
+            System.out.print("\nВведите номер права для удаления (1–" + permList.size() + "): ");
+            String input = scanner.nextLine().trim();
+            try {
+                int index = Integer.parseInt(input) - 1;
+                if (index < 0 || index >= permList.size()) {
+                    System.out.println("Неверный номер.");
+                    return;
+                }
+
+                Permission permissionToRemove = permList.get(index);
+                system.getRoleManager().removePermissionFromRole(roleName, permissionToRemove);
+
+                System.out.println("Право успешно удалено:");
+                System.out.println("  " + permissionToRemove.format());
+
+            } catch (NumberFormatException e) {
+                System.out.println("Введите корректный номер.");
+            } catch (IllegalArgumentException e) {
+                System.out.println("Ошибка при удалении права: " + e.getMessage());
             }
         });
     }
