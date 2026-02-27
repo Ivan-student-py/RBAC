@@ -21,7 +21,7 @@ public class CommandRegistry {
         registerUserList(parser);
         registerUserCreate(parser);
         registerUserView(parser);
-
+        registerUserUpdate(parser);
 
         // === Команды управления ролями ===
 
@@ -166,6 +166,52 @@ public class CommandRegistry {
                 }
             }
             System.out.println("==================================");
+        });
+    }
+    private static void registerUserUpdate(CommandParser parser) {
+        parser.registerCommand("user-update", "Обновить данные пользователя", (scanner, system) -> {
+            System.out.print("\nВведите username пользователя для обновления: ");
+            String username = scanner.nextLine().trim();
+            if (username.isEmpty()) {
+                System.out.println("Username не может быть пустым.");
+                return;
+            }
+
+            Optional<User> existing = system.getUserManager().findByUsername(username);
+            if (existing.isEmpty()) {
+                System.out.println("Пользователь с username '" + username + "' не найден.");
+                return;
+            }
+
+            User current = existing.get();
+            System.out.println("Текущие данные:");
+            System.out.println("  Полное имя: " + current.fullName());
+            System.out.println("  Email: " + current.email());
+
+            try {
+                System.out.print("Введите новое полное имя (оставьте пустым, чтобы оставить без изменений): ");
+                String newFullName = scanner.nextLine().trim();
+                if (newFullName.isEmpty()) {
+                    newFullName = current.fullName();
+                }
+
+                System.out.print("Введите новый email (оставьте пустым, чтобы оставить без изменений): ");
+                String newEmail = scanner.nextLine().trim();
+                if (newEmail.isEmpty()) {
+                    newEmail = current.email();
+                }
+
+                system.getUserManager().update(username, newFullName, newEmail);
+
+                System.out.println("Данные пользователя успешно обновлены:");
+                Optional<User> updated = system.getUserManager().findByUsername(username);
+                updated.ifPresent(u -> System.out.println(u.format()));
+
+            } catch (IllegalArgumentException e) {
+                System.out.println("Ошибка при обновлении: " + e.getMessage());
+            } catch (Exception e) {
+                System.out.println("Неожиданная ошибка: " + e.getMessage());
+            }
         });
     }
 }
