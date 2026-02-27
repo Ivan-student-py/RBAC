@@ -22,6 +22,7 @@ public class CommandRegistry {
         registerUserCreate(parser);
         registerUserView(parser);
         registerUserUpdate(parser);
+        registerUserDelete(parser);
 
         // === Команды управления ролями ===
 
@@ -168,6 +169,7 @@ public class CommandRegistry {
             System.out.println("==================================");
         });
     }
+
     private static void registerUserUpdate(CommandParser parser) {
         parser.registerCommand("user-update", "Обновить данные пользователя", (scanner, system) -> {
             System.out.print("\nВведите username пользователя для обновления: ");
@@ -214,4 +216,56 @@ public class CommandRegistry {
             }
         });
     }
+
+    private static void registerUserDelete(CommandParser parser) {
+        parser.registerCommand("user-delete", "Удалить пользователя", (scanner, system) -> {
+            System.out.print("\nВведите username пользователя для удаления: ");
+            String username = scanner.nextLine().trim();
+            if (username.isEmpty()) {
+                System.out.println("Username не может быть пустым.");
+                return;
+            }
+
+            Optional<User> userOpt = system.getUserManager().findByUsername(username);
+            if (userOpt.isEmpty()) {
+                System.out.println("Пользователь с username '" + username + "' не найден.");
+                return;
+            }
+
+            User user = userOpt.get();
+            System.out.println("Вы собираетесь удалить пользователя:");
+            System.out.println(user.format());
+
+            // Получение всех назначений пользователя
+            List<RoleAssignment> assignments = system.getAssignmentManager().findByUser(user);
+            if (!assignments.isEmpty()) {
+                System.out.println("\n У пользователя есть " + assignments.size() + " назначений(е/ий).");
+                System.out.println("Все назначения будут удалены автоматически.");
+            }
+
+            System.out.print("\nПодтвердите удаление (введите \"да\"): ");
+            String confirm = scanner.nextLine().trim();
+            if (!"да".equals(confirm)) {
+                System.out.println("Удаление отменено.");
+                return;
+            }
+
+            try {
+                for (RoleAssignment assignment : assignments) {
+                    system.getAssignmentManager().remove(assignment);
+                }
+
+                boolean removed = system.getUserManager().remove(user);
+                if (removed) {
+                    System.out.println("Пользователь и все его назначения успешно удалены.");
+                } else {
+                    System.out.println("Не удалось удалить пользователя.");
+                }
+            } catch (Exception e) {
+                System.out.println("Ошибка при удалении: " + e.getMessage());
+            }
+        });
+    }
+
+
 }
