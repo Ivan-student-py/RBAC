@@ -1,5 +1,10 @@
 package ru.zvonkov.rbac;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class RBACSystem {
     private final UserManager userManager;
     private final RoleManager roleManager;
@@ -76,7 +81,45 @@ public class RBACSystem {
     }
 
     public String generateStatistics() {
-        //
-        return "Statistics not implemented yet";
+        int totalUsers = userManager.count();
+        int totalRoles = roleManager.count();
+        int totalAssignments = assignmentManager.count();
+        int activeAssignments = assignmentManager.getActiveAssignments().size();
+        int expiredAssignments = assignmentManager.getExpiredAssignments().size();
+
+        double avgRolesPerUser = totalUsers > 0 ? (double) activeAssignments / totalUsers : 0.0;
+
+        Map<String, Integer> roleUsage = new HashMap<>();
+        for (RoleAssignment assignment : assignmentManager.getActiveAssignments()) {
+            String roleName = assignment.role().name();
+            roleUsage.put(roleName, roleUsage.getOrDefault(roleName, 0) + 1);
+        }
+
+        List<Map.Entry<String, Integer>> topRoles = roleUsage.entrySet().stream()
+                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+                .limit(3)
+                .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("=== Статистика RBAC-системы ===\n");
+        sb.append(String.format("Пользователей: %d\n", totalUsers));
+        sb.append(String.format("Ролей: %d\n", totalRoles));
+        sb.append(String.format("Назначений всего: %d\n", totalAssignments));
+        sb.append(String.format("  - Активных: %d\n", activeAssignments));
+        sb.append(String.format("  - Истёкших: %d\n", expiredAssignments));
+        sb.append(String.format("Среднее количество ролей на пользователя: %.2f\n", avgRolesPerUser));
+
+        if (!topRoles.isEmpty()) {
+            sb.append("Топ-3 самых популярных ролей:\n");
+            for (int i = 0; i < topRoles.size(); i++) {
+                Map.Entry<String, Integer> entry = topRoles.get(i);
+                sb.append(String.format("  %d. %s (%d назначений)\n", i + 1, entry.getKey(), entry.getValue()));
+            }
+        } else {
+            sb.append("Нет активных назначений ролей.\n");
+        }
+        sb.append("================================\n");
+
+        return sb.toString();
     }
 }
