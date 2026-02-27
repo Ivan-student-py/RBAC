@@ -9,22 +9,29 @@ public class Role {
     private final Set<Permission> permissions;
 
     public Role(String name, String description) {
+        this(name, description, generateId(), new ArrayList<>());
+    }
+
+    Role(String name, String description, String id, Collection<Permission> permissions) {
         if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("Role name must not be null or empty");
         }
-        if (description == null || description.trim().isEmpty()){
-            throw new IllegalArgumentException("Role description must not be null or empty");
-        }
-
-        this.id = UUID.randomUUID().toString();
         this.name = name.trim();
-        this.description = description.trim();
-        this.permissions = new HashSet<>();
+        this.description = (description == null || description.trim().isEmpty())
+                ? "Без описания"
+                : description.trim();
+        this.id = id;
+        this.permissions = new HashSet<>(permissions);
+    }
+
+    private static String generateId() {
+        return "r-" + UUID.randomUUID().toString().substring(0, 8);
     }
 
     public String id() { return id; }
-    public String name() {return name; }
-    public String description() {return description; }
+    public String name() { return name; }
+    public String description() { return description; }
+
     public Set<Permission> getPermissions() {
         return Collections.unmodifiableSet(permissions);
     }
@@ -35,25 +42,19 @@ public class Role {
         }
         return permissions.add(permission);
     }
+
     public boolean hasPermission(Permission permission) {
-        if (permission == null) {
-            return false;
-        }
-        return permissions.contains(permission);
+        return permission != null && permissions.contains(permission);
     }
 
     public boolean hasPermission(String name, String resource) {
-        if (name == null || resource == null) {
-            return false;
-        }
+        if (name == null || resource == null) return false;
         return permissions.stream()
                 .anyMatch(p -> p.matches(name, resource));
     }
 
     public boolean removePermission(Permission permission) {
-        if (permission == null) {
-            return false;
-        }
+        if (permission == null) return false;
         return permissions.remove(permission);
     }
 
@@ -87,6 +88,6 @@ public class Role {
 
     @Override
     public String toString() {
-        return "Role{id='" + "', name='" + name + "'}";
+        return "Role{id='" + id + "', name='" + name + "'}";
     }
 }

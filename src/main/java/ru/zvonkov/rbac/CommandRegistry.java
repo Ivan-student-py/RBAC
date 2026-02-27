@@ -29,6 +29,7 @@ public class CommandRegistry {
         registerRoleList(parser);
         registerRoleCreate(parser);
         registerRoleView(parser);
+        registerRoleUpdate(parser);
 
         // === Команды управления назначениями ===
 
@@ -367,7 +368,6 @@ public class CommandRegistry {
             System.out.println("\n=== Создание новой роли ===");
 
             try {
-                // Запрос названия
                 System.out.print("Введите название роли: ");
                 String name = scanner.nextLine().trim();
                 if (name.isEmpty()) {
@@ -375,18 +375,15 @@ public class CommandRegistry {
                     return;
                 }
 
-                // Запрос описания
                 System.out.print("Введите описание роли: ");
                 String description = scanner.nextLine().trim();
                 if (description.isEmpty()) {
                     description = "Без описания";
                 }
 
-                // Создание роли
                 Role role = new Role(name, description);
                 System.out.println("Роль '" + name + "' создана.");
 
-                // Цикл добавления прав
                 while (true) {
                     System.out.print("\nХотите добавить право? (да/нет): ");
                     String addPerm = scanner.nextLine().trim().toLowerCase();
@@ -417,7 +414,6 @@ public class CommandRegistry {
                     System.out.println("    Право добавлено: " + permission.format());
                 }
 
-                // Добавление роли в систему
                 system.getRoleManager().add(role);
                 System.out.println("\nРоль успешно сохранена в системе.");
                 System.out.println(role.format());
@@ -460,6 +456,62 @@ public class CommandRegistry {
                 }
             }
             System.out.println("=".repeat(40));
+        });
+    }
+
+    private static void registerRoleUpdate(CommandParser parser) {
+        parser.registerCommand("role-update", "Обновить название или описание роли", (scanner, system) -> {
+            System.out.print("\nВведите текущее название роли для обновления: ");
+            String oldName = scanner.nextLine().trim();
+            if (oldName.isEmpty()) {
+                System.out.println("Название роли не может быть пустым.");
+                return;
+            }
+
+            Optional<Role> oldRoleOpt = system.getRoleManager().findByName(oldName);
+            if (oldRoleOpt.isEmpty()) {
+                System.out.println("Роль с названием '" + oldName + "' не найдена.");
+                return;
+            }
+
+            Role oldRole = oldRoleOpt.get();
+            System.out.println("Текущие данные:");
+            System.out.println("  Название: " + oldRole.name());
+            System.out.println("  Описание: " + oldRole.description());
+
+            try {
+                System.out.print("Введите новое название (оставьте пустым, чтобы оставить без изменений): ");
+                String newName = scanner.nextLine().trim();
+                if (newName.isEmpty()) {
+                    newName = oldRole.name();
+                }
+
+                System.out.print("Введите новое описание (оставьте пустым, чтобы оставить без изменений): ");
+                String newDesc = scanner.nextLine().trim();
+                if (newDesc.isEmpty()) {
+                    newDesc = oldRole.description();
+                }
+
+                if (!newName.equals(oldRole.name()) && system.getRoleManager().exists(newName)) {
+                    System.out.println("Роль с названием '" + newName + "' уже существует.");
+                    return;
+                }
+
+                Role newRole = new Role(newName, newDesc, oldRole.id(), new ArrayList<>(oldRole.getPermissions()));
+
+                boolean removed = system.getRoleManager().remove(oldRole);
+                if (!removed) {
+                    System.out.println("Не удалось удалить старую роль.");
+                    return;
+                }
+
+                system.getRoleManager().add(newRole);
+                System.out.println("Роль успешно обновлена:");
+                System.out.println(newRole.format());
+
+            } catch (Exception e) {
+                System.out.println("Ошибка при обновлении роли: " + e.getMessage());
+            }
         });
     }
 
