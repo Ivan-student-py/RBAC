@@ -17,7 +17,7 @@ public record Permission(String name, String resource, String description) {
     }
 
     public String format() {
-        return name + " on " + resource + ": " + description;
+        return name + " на " + resource + " - " + description;
     }
 
     public boolean matches(String namePattern, String resourcePattern) {

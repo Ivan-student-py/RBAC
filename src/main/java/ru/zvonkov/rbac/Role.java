@@ -59,15 +59,14 @@ public class Role {
 
     public String format() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Role: ").append(name).append("\n");
-        sb.append("ID: ").append(id).append("\n");
-        sb.append("Description: ").append(description).append("\n");
-        sb.append("Permissions: \n");
+        sb.append("Роль: ").append(name()).append(" (ID: ").append(id()).append(")\n");
+        sb.append("Описание: ").append(description()).append("\n");
+        sb.append("Права (").append(permissions.size()).append("):\n");
         if (permissions.isEmpty()) {
-            sb.append("  (no permissions)\n");
+            sb.append("  Нет прав\n");
         } else {
             for (Permission p : permissions) {
-                sb.append("  - ").append(p.format()).append("\n");
+                sb.append("  • ").append(p.format()).append("\n");
             }
         }
         return sb.toString();

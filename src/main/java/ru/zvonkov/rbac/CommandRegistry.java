@@ -28,6 +28,7 @@ public class CommandRegistry {
         // === Команды управления ролями ===
         registerRoleList(parser);
         registerRoleCreate(parser);
+        registerRoleView(parser);
 
         // === Команды управления назначениями ===
 
@@ -426,6 +427,39 @@ public class CommandRegistry {
             } catch (Exception e) {
                 System.out.println("Неожиданная ошибка: " + e.getMessage());
             }
+        });
+    }
+
+    private static void registerRoleView(CommandParser parser) {
+        parser.registerCommand("role-view", "Просмотр информации о роли", (scanner, system) -> {
+            System.out.print("\nВведите название роли: ");
+            String roleName = scanner.nextLine().trim();
+            if (roleName.isEmpty()) {
+                System.out.println("Название роли не может быть пустым.");
+                return;
+            }
+
+            Optional<Role> roleOpt = system.getRoleManager().findByName(roleName);
+            if (roleOpt.isEmpty()) {
+                System.out.println("Роль с названием '" + roleName + "' не найдена.");
+                return;
+            }
+
+            Role role = roleOpt.get();
+            System.out.println("\n=== Информация о роли ===");
+            System.out.println(role.format());
+
+            List<RoleAssignment> assignments = system.getAssignmentManager().findByRole(role);
+            if (assignments.isEmpty()) {
+                System.out.println("\nЭта роль не назначена ни одному пользователю.");
+            } else {
+                System.out.println("\nНазначена " + assignments.size() + " пользователю(ям):");
+                for (RoleAssignment a : assignments) {
+                    System.out.println("  • " + a.user().username() +
+                            " (" + (a.isActive() ? "активно" : "неактивно") + ")");
+                }
+            }
+            System.out.println("=".repeat(40));
         });
     }
 
