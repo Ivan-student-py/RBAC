@@ -1,7 +1,10 @@
 package ru.zvonkov.rbac;
 
+import java.util.Scanner;
+
 public class Main {
     public static void main(String[] args) {
+        /*
         System.out.println("=== Тестирование User ===");
 
         try {
@@ -263,5 +266,10 @@ public class Main {
         System.out.println("=== Тестирование сортировки завершено ===");
 
         System.out.println("=== Тестирование завершено ===");
+         */
+        RBACSystem system = new RBACSystem();
+        system.initialize();
+
+        System.out.println("\n" + system.generateStatistics());
     }
 }
