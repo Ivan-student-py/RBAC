@@ -42,4 +42,12 @@ public final class UserFilters {
         String clean = substring.trim().toLowerCase();
         return user -> user.fullName().toLowerCase().contains(clean);
     }
+
+    public static UserFilter byEmailContains(String substring) {
+        if (substring == null || substring.trim().isEmpty()) {
+            throw new IllegalArgumentException("Substring must not be null or empty");
+        }
+        String clean = substring.trim().toLowerCase();
+        return user -> user.email().toLowerCase().contains(clean);
+    }
 }

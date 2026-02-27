@@ -23,6 +23,7 @@ public class CommandRegistry {
         registerUserView(parser);
         registerUserUpdate(parser);
         registerUserDelete(parser);
+        registerUserSearch(parser);
 
         // === Команды управления ролями ===
 
@@ -267,5 +268,73 @@ public class CommandRegistry {
         });
     }
 
+    private static void registerUserSearch(CommandParser parser) {
+        parser.registerCommand("user-search", "Поиск пользователей по фильтрам", (scanner, system) -> {
+            System.out.println("\n=== Поиск пользователей ===");
+            System.out.println("Выберите тип фильтра:");
+            System.out.println("1. По username (содержит)");
+            System.out.println("2. По email (содержит)");
+            System.out.println("3. По домену email (например, @example.com)");
+            System.out.println("4. По полному имени (содержит)");
+            System.out.print("Введите номер фильтра (1–4): ");
 
+            String choice = scanner.nextLine().trim();
+            UserFilter filter = null;
+
+            switch (choice) {
+                case "1":
+                    System.out.print("Введите подстроку для поиска в username: ");
+                    String substr1 = scanner.nextLine().trim();
+                    if (!substr1.isEmpty()) {
+                        filter = UserFilters.byUsernameContains(substr1);
+                    }
+                    break;
+                case "2":
+                    System.out.print("Введите подстроку для поиска в email: ");
+                    String substr2 = scanner.nextLine().trim();
+                    if (!substr2.isEmpty()) {
+                        filter = UserFilters.byEmailContains(substr2); // ← нужно добавить!
+                    }
+                    break;
+                case "3":
+                    System.out.print("Введите домен email (например, @example.com): ");
+                    String domain = scanner.nextLine().trim();
+                    if (!domain.isEmpty()) {
+                        if (!domain.startsWith("@")) domain = "@" + domain;
+                        filter = UserFilters.byEmailDomain(domain);
+                    }
+                    break;
+                case "4":
+                    System.out.print("Введите подстроку для поиска в полном имени: ");
+                    String substr4 = scanner.nextLine().trim();
+                    if (!substr4.isEmpty()) {
+                        filter = UserFilters.byFullNameContains(substr4);
+                    }
+                    break;
+                default:
+                    System.out.println("Неверный выбор.");
+                    return;
+            }
+
+            if (filter == null) {
+                System.out.println("Пустой запрос — поиск отменён.");
+                return;
+            }
+
+            List<User> results = system.getUserManager().findByFilter(filter);
+            if (results.isEmpty()) {
+                System.out.println("\nНет пользователей, соответствующих фильтру.");
+            } else {
+                System.out.println("\nНайдено " + results.size() + " пользователь(ей):");
+                System.out.printf("%-20s | %-25s | %s%n", "Username", "Full Name", "Email");
+                System.out.println("-".repeat(70));
+                for (User user : results) {
+                    System.out.printf("%-20s | %-25s | %s%n",
+                            user.username(),
+                            user.fullName(),
+                            user.email());
+                }
+            }
+        });
+    }
 }
