@@ -26,6 +26,7 @@ public class CommandRegistry {
         registerUserSearch(parser);
 
         // === Команды управления ролями ===
+        registerRoleList(parser);
 
         // === Команды управления назначениями ===
 
@@ -337,4 +338,27 @@ public class CommandRegistry {
             }
         });
     }
+
+    private static void registerRoleList(CommandParser parser) {
+        parser.registerCommand("role-list", "Вывести список всех ролей", (scanner, system) -> {
+            System.out.println("\n=== Список ролей ===");
+            List<Role> roles = system.getRoleManager().findAll();
+            if (roles.isEmpty()) {
+                System.out.println("Нет зарегистрированных ролей.");
+                return;
+            }
+
+            System.out.printf("%-25s | %-10s | %s%n", "Название роли", "Права", "ID");
+            System.out.println("-".repeat(65));
+            for (Role role : roles) {
+                System.out.printf("%-25s | %-10d | %s%n",
+                        role.name(),
+                        role.getPermissions().size(),
+                        role.id());
+            }
+            System.out.println("=".repeat(65));
+        });
+    }
+
+
 }
