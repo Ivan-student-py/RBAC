@@ -17,6 +17,7 @@ public class CommandRegistry {
 
         // === Команды управления пользователями ===
         registerUserList(parser);
+        registerUserCreate(parser);
 
 
         // === Команды управления ролями ===
@@ -71,6 +72,46 @@ public class CommandRegistry {
                         user.email());
             }
             System.out.println("=".repeat(70));
+        });
+    }
+
+    private static void registerUserCreate(CommandParser parser) {
+        parser.registerCommand("user-create", "Создать нового пользователя", (scanner, system) -> {
+            System.out.println("\n=== Создание нового пользователя ===");
+
+            try {
+                System.out.print("Введите username (3–20 символов, буквы, цифры, _): ");
+                String username = scanner.nextLine().trim();
+                if (username.isEmpty()) {
+                    System.out.println("Ошибка: username не может быть пустым.");
+                    return;
+                }
+
+                System.out.print("Введите полное имя: ");
+                String fullName = scanner.nextLine().trim();
+                if (fullName.isEmpty()) {
+                    System.out.println("Ошибка: полное имя не может быть пустым.");
+                    return;
+                }
+
+                System.out.print("Введите email: ");
+                String email = scanner.nextLine().trim();
+                if (email.isEmpty()) {
+                    System.out.println("Ошибка: email не может быть пустым.");
+                    return;
+                }
+
+                User user = User.validate(username, fullName, email);
+                system.getUserManager().add(user);
+
+                System.out.println("Пользователь успешно создан:");
+                System.out.println(user.format());
+
+            } catch (IllegalArgumentException e) {
+                System.out.println("Ошибка при создании пользователя: " + e.getMessage());
+            } catch (Exception e) {
+                System.out.println("Неожиданная ошибка: " + e.getMessage());
+            }
         });
     }
 }
