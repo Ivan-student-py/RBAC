@@ -31,6 +31,7 @@ public class CommandRegistry {
         registerRoleView(parser);
         registerRoleUpdate(parser);
         registerRoleDelete(parser);
+        registerRoleAddPermission(parser);
 
         // === Команды управления назначениями ===
 
@@ -562,6 +563,55 @@ public class CommandRegistry {
                 }
             } catch (Exception e) {
                 System.out.println("Ошибка при удалении: " + e.getMessage());
+            }
+        });
+    }
+
+    private static void registerRoleAddPermission(CommandParser parser) {
+        parser.registerCommand("role-add-permission", "Добавить право к роли", (scanner, system) -> {
+            System.out.print("\nВведите название роли: ");
+            String roleName = scanner.nextLine().trim();
+            if (roleName.isEmpty()) {
+                System.out.println("Название роли не может быть пустым.");
+                return;
+            }
+
+            if (!system.getRoleManager().exists(roleName)) {
+                System.out.println("Роль с названием '" + roleName + "' не найдена.");
+                return;
+            }
+
+            try {
+                System.out.print("Введите имя права (например, READ, WRITE): ");
+                String permName = scanner.nextLine().trim();
+                if (permName.isEmpty()) {
+                    System.out.println("Имя права не может быть пустым.");
+                    return;
+                }
+
+                System.out.print("Введите ресурс (например, users, roles): ");
+                String resource = scanner.nextLine().trim();
+                if (resource.isEmpty()) {
+                    System.out.println("Ресурс не может быть пустым.");
+                    return;
+                }
+
+                System.out.print("Введите описание права: ");
+                String description = scanner.nextLine().trim();
+                if (description.isEmpty()) {
+                    description = "Без описания";
+                }
+
+                Permission permission = new Permission(permName, resource, description);
+                system.getRoleManager().addPermissionToRole(roleName, permission);
+
+                System.out.println("Право успешно добавлено к роли '" + roleName + "':");
+                System.out.println("  " + permission.format());
+
+            } catch (IllegalArgumentException e) {
+                System.out.println("Ошибка при добавлении права: " + e.getMessage());
+            } catch (Exception e) {
+                System.out.println("Неожиданная ошибка: " + e.getMessage());
             }
         });
     }
