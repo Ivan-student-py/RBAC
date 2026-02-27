@@ -37,11 +37,11 @@ public class CommandRegistry {
 
         // === Команды управления назначениями ===
         registerAssignRole(parser);
+        registerRevokeRole(parser);
 
         // === Команды просмотра прав ===
     }
 
-    // --- Служебные команды ---
     private static void registerHelp(CommandParser parser) {
         parser.registerCommand("help", "Показать справку по командам", (scanner, system) -> {
             parser.printHelp();
@@ -823,6 +823,67 @@ public class CommandRegistry {
                 System.out.println("Введите корректный номер.");
             } catch (IllegalArgumentException e) {
                 System.out.println("Ошибка при назначении: " + e.getMessage());
+            }
+        });
+    }
+
+    private static void registerRevokeRole(CommandParser parser) {
+        parser.registerCommand("revoke-role", "Отозвать роль у пользователя", (scanner, system) -> {
+            System.out.print("\nВведите username пользователя: ");
+            String username = scanner.nextLine().trim();
+            if (username.isEmpty()) {
+                System.out.println("Username не может быть пустым.");
+                return;
+            }
+
+            Optional<User> userOpt = system.getUserManager().findByUsername(username);
+            if (userOpt.isEmpty()) {
+                System.out.println("Пользователь '" + username + "' не найден.");
+                return;
+            }
+            User user = userOpt.get();
+
+            List<RoleAssignment> activeAssignments = system.getAssignmentManager()
+                    .getActiveAssignments().stream()
+                    .filter(a -> a.user().username().equals(username))
+                    .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+
+            if (activeAssignments.isEmpty()) {
+                System.out.println("У пользователя '" + username + "' нет активных назначений.");
+                return;
+            }
+
+            System.out.println("\nАктивные назначения пользователя '" + username + "':");
+            for (int i = 0; i < activeAssignments.size(); i++) {
+                RoleAssignment a = activeAssignments.get(i);
+                String type = (a instanceof PermanentAssignment) ? "Постоянное" : "Временное";
+                System.out.printf("  %d. Роль: %s | Тип: %s | Назначено: %s\n",
+                        i + 1,
+                        a.role().name(),
+                        type,
+                        a.metadata().assignedAt());
+            }
+
+            System.out.print("\nВыберите номер назначения для отзыва (1–" + activeAssignments.size() + "): ");
+            String input = scanner.nextLine().trim();
+            try {
+                int index = Integer.parseInt(input) - 1;
+                if (index < 0 || index >= activeAssignments.size()) {
+                    System.out.println("Неверный номер.");
+                    return;
+                }
+
+                RoleAssignment assignment = activeAssignments.get(index);
+                boolean success = system.getAssignmentManager().remove(assignment);
+
+                if (success) {
+                    System.out.println("Назначение успешно отозвано.");
+                } else {
+                    System.out.println("Не удалось отозвать назначение.");
+                }
+
+            } catch (NumberFormatException e) {
+                System.out.println("Введите корректный номер.");
             }
         });
     }
