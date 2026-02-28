@@ -42,6 +42,7 @@ public class CommandRegistry {
         registerAssignmentListUser(parser);
         registerAssignmentListRole(parser);
         registerAssignmentActive(parser);
+        registerAssignmentExpired(parser);
 
         // === Команды просмотра прав ===
     }
@@ -1019,6 +1020,34 @@ public class CommandRegistry {
                         username, roleName, type, assignedAt);
             }
             System.out.println("=".repeat(70));
+        });
+    }
+
+    private static void registerAssignmentExpired(CommandParser parser) {
+        parser.registerCommand("assignment-expired", "Истёкшие временные назначения", (scanner, system) -> {
+            System.out.println("\n=== Истёкшие временные назначения ===");
+            List<RoleAssignment> expiredAssignments = system.getAssignmentManager().getExpiredAssignments();
+            if (expiredAssignments.isEmpty()) {
+                System.out.println("Нет истёкших временных назначений.");
+                return;
+            }
+
+            System.out.printf("%-15s | %-20s | %-12s | %-20s | %s%n",
+                    "Username", "Роль", "Тип", "Назначено", "Истекло");
+            System.out.println("-".repeat(90));
+
+            for (RoleAssignment a : expiredAssignments) {
+                if (!(a instanceof TemporaryAssignment)) continue;
+
+                String username = a.user().username();
+                String roleName = a.role().name();
+                String assignedAt = a.metadata().assignedAt();
+                String expiredAt = ((TemporaryAssignment) a).expiresAt();
+
+                System.out.printf("%-15s | %-20s | %-12s | %-20s | %s%n",
+                        username, roleName, "Временное", assignedAt, expiredAt);
+            }
+            System.out.println("=".repeat(90));
         });
     }
 
