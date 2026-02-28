@@ -48,6 +48,7 @@ public class CommandRegistry {
 
         // === Команды просмотра прав ===
         registerPermissionsUser(parser);
+        registerPermissionsCheck(parser);
     }
 
     private static void registerHelp(CommandParser parser) {
@@ -1249,5 +1250,59 @@ public class CommandRegistry {
         });
     }
 
+    private static void registerPermissionsCheck(CommandParser parser) {
+        parser.registerCommand("permissions-check", "Проверить наличие конкретного права у пользователя", (scanner, system) -> {
+            System.out.print("\nВведите username пользователя: ");
+            String username = scanner.nextLine().trim();
+            if (username.isEmpty()) {
+                System.out.println("Username не может быть пустым.");
+                return;
+            }
 
+            Optional<User> userOpt = system.getUserManager().findByUsername(username);
+            if (userOpt.isEmpty()) {
+                System.out.println("Пользователь '" + username + "' не найден.");
+                return;
+            }
+            User user = userOpt.get();
+
+            System.out.print("Введите имя права (например, READ): ");
+            String permName = scanner.nextLine().trim();
+            if (permName.isEmpty()) {
+                System.out.println("Имя права не может быть пустым.");
+                return;
+            }
+
+            System.out.print("Введите ресурс (например, users): ");
+            String resource = scanner.nextLine().trim();
+            if (resource.isEmpty()) {
+                System.out.println("Ресурс не может быть пустым.");
+                return;
+            }
+
+            boolean hasPermission = system.getAssignmentManager().userHasPermission(user, permName, resource);
+            if (!hasPermission) {
+                System.out.println("\nУ пользователя '" + username + "' нет права '" + permName + "' на ресурс '" + resource + "'.");
+                return;
+            }
+
+            List<String> sourceRoles = new ArrayList<>();
+            List<RoleAssignment> activeAssignments = system.getAssignmentManager().getActiveAssignments();
+            for (RoleAssignment a : activeAssignments) {
+                if (!a.user().username().equals(username)) continue;
+                if (a.role().hasPermission(permName, resource)) {
+                    sourceRoles.add(a.role().name());
+                }
+            }
+
+            System.out.println("\nПраво найдено!");
+            System.out.println("Пользователь: " + username);
+            System.out.println("Право: " + permName + " на ресурс: " + resource);
+            if (!sourceRoles.isEmpty()) {
+                System.out.println("Предоставлено ролями: " + String.join(", ", sourceRoles));
+            } else {
+                System.out.println("Право обнаружено, но источник не определён.");
+            }
+        });
+    }
 }
