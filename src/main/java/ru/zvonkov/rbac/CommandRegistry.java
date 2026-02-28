@@ -41,6 +41,7 @@ public class CommandRegistry {
         registerAssignmentList(parser);
         registerAssignmentListUser(parser);
         registerAssignmentListRole(parser);
+        registerAssignmentActive(parser);
 
         // === Команды просмотра прав ===
     }
@@ -992,6 +993,32 @@ public class CommandRegistry {
                 }
             }
             System.out.println("=".repeat(50));
+        });
+    }
+
+    private static void registerAssignmentActive(CommandParser parser) {
+        parser.registerCommand("assignment-active", "Только активные назначения", (scanner, system) -> {
+            System.out.println("\n=== Активные назначения ===");
+            List<RoleAssignment> activeAssignments = system.getAssignmentManager().getActiveAssignments();
+            if (activeAssignments.isEmpty()) {
+                System.out.println("Нет активных назначений.");
+                return;
+            }
+
+            System.out.printf("%-15s | %-20s | %-12s | %s%n",
+                    "Username", "Роль", "Тип", "Назначено");
+            System.out.println("-".repeat(70));
+
+            for (RoleAssignment a : activeAssignments) {
+                String username = a.user().username();
+                String roleName = a.role().name();
+                String type = (a instanceof PermanentAssignment) ? "Постоянное" : "Временное";
+                String assignedAt = a.metadata().assignedAt();
+
+                System.out.printf("%-15s | %-20s | %-12s | %s%n",
+                        username, roleName, type, assignedAt);
+            }
+            System.out.println("=".repeat(70));
         });
     }
 
