@@ -43,6 +43,7 @@ public class CommandRegistry {
         registerAssignmentListRole(parser);
         registerAssignmentActive(parser);
         registerAssignmentExpired(parser);
+        registerAssignmentExtend(parser);
 
         // === Команды просмотра прав ===
     }
@@ -1048,6 +1049,73 @@ public class CommandRegistry {
                         username, roleName, "Временное", assignedAt, expiredAt);
             }
             System.out.println("=".repeat(90));
+        });
+    }
+
+    private static void registerAssignmentExtend(CommandParser parser) {
+        parser.registerCommand("assignment-extend", "Продлить временное назначение", (scanner, system) -> {
+            System.out.print("\nВведите username пользователя: ");
+            String username = scanner.nextLine().trim();
+            if (username.isEmpty()) {
+                System.out.println("Username не может быть пустым.");
+                return;
+            }
+
+            System.out.print("Введите название роли: ");
+            String roleName = scanner.nextLine().trim();
+            if (roleName.isEmpty()) {
+                System.out.println("Название роли не может быть пустым.");
+                return;
+            }
+
+            Optional<User> userOpt = system.getUserManager().findByUsername(username);
+            if (userOpt.isEmpty()) {
+                System.out.println("Пользователь '" + username + "' не найден.");
+                return;
+            }
+            User user = userOpt.get();
+
+            Optional<Role> roleOpt = system.getRoleManager().findByName(roleName);
+            if (roleOpt.isEmpty()) {
+                System.out.println("Роль '" + roleName + "' не найдена.");
+                return;
+            }
+            Role role = roleOpt.get();
+
+            List<RoleAssignment> assignments = system.getAssignmentManager()
+                    .getActiveAssignments().stream()
+                    .filter(a -> a.user().username().equals(username) &&
+                            a.role().name().equals(roleName))
+                    .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+
+            TemporaryAssignment target = null;
+            for (RoleAssignment a : assignments) {
+                if (a instanceof TemporaryAssignment) {
+                    target = (TemporaryAssignment) a;
+                    break;
+                }
+            }
+
+            if (target == null) {
+                System.out.println("Активное временное назначение роли '" + roleName +
+                        "' пользователю '" + username + "' не найдено.");
+                return;
+            }
+
+            System.out.println("Текущая дата истечения: " + target.expiresAt());
+            System.out.print("Введите новую дату истечения (формат: yyyy-MM-dd HH:mm): ");
+            String newExpiresAt = scanner.nextLine().trim();
+            if (newExpiresAt.isEmpty()) {
+                System.out.println("Дата истечения обязательна.");
+                return;
+            }
+
+            try {
+                system.getAssignmentManager().extendTemporaryAssignment(target.assignmentId(), newExpiresAt);
+                System.out.println("Назначение успешно продлено до: " + newExpiresAt);
+            } catch (Exception e) {
+                System.out.println("Ошибка при продлении: " + e.getMessage());
+            }
         });
     }
 
