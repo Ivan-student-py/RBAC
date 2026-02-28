@@ -44,6 +44,7 @@ public class CommandRegistry {
         registerAssignmentActive(parser);
         registerAssignmentExpired(parser);
         registerAssignmentExtend(parser);
+        registerAssignmentSearch(parser);
 
         // === Команды просмотра прав ===
     }
@@ -1115,6 +1116,95 @@ public class CommandRegistry {
                 System.out.println("Назначение успешно продлено до: " + newExpiresAt);
             } catch (Exception e) {
                 System.out.println("Ошибка при продлении: " + e.getMessage());
+            }
+        });
+    }
+
+    private static void registerAssignmentSearch(CommandParser parser) {
+        parser.registerCommand("assignment-search", "Поиск назначений по фильтрам", (scanner, system) -> {
+            System.out.println("\n=== Поиск назначений ===");
+            System.out.println("Выберите тип фильтра:");
+            System.out.println("1. По пользователю (username)");
+            System.out.println("2. По роли");
+            System.out.println("3. По типу (постоянное/временное)");
+            System.out.println("4. По статусу (активное/неактивное)");
+            System.out.println("5. Назначённые после даты");
+            System.out.println("6. Истекающие до даты");
+            System.out.print("Введите номер фильтра (1–6): ");
+
+            String choice = scanner.nextLine().trim();
+            AssignmentFilter filter = null;
+
+            switch (choice) {
+                case "1":
+                    System.out.print("Введите username: ");
+                    String user = scanner.nextLine().trim();
+                    if (!user.isEmpty()) {
+                        filter = a -> a.user().username().equals(user);
+                    }
+                    break;
+                case "2":
+                    System.out.print("Введите название роли: ");
+                    String role = scanner.nextLine().trim();
+                    if (!role.isEmpty()) {
+                        filter = a -> a.role().name().equals(role);
+                    }
+                    break;
+                case "3":
+                    System.out.print("Тип: 1 — постоянное, 2 — временное: ");
+                    String type = scanner.nextLine().trim();
+                    boolean isTemp = "2".equals(type);
+                    filter = a -> (a instanceof TemporaryAssignment) == isTemp;
+                    break;
+                case "4":
+                    System.out.print("Статус: 1 — активное, 2 — неактивное: ");
+                    String status = scanner.nextLine().trim();
+                    boolean active = "1".equals(status);
+                    filter = AssignmentFilters.byStatus(active);
+                    break;
+                case "5":
+                    System.out.print("Дата (формат: yyyy-MM-dd HH:mm): ");
+                    String afterDate = scanner.nextLine().trim();
+                    if (!afterDate.isEmpty()) {
+                        filter = a -> a.metadata().assignedAt().compareTo(afterDate) > 0;
+                    }
+                    break;
+                case "6":
+                    System.out.print("Дата (формат: yyyy-MM-dd HH:mm): ");
+                    String beforeDate = scanner.nextLine().trim();
+                    if (!beforeDate.isEmpty()) {
+                        filter = a -> (a instanceof TemporaryAssignment) &&
+                                ((TemporaryAssignment) a).expiresAt().compareTo(beforeDate) < 0;
+                    }
+                    break;
+                default:
+                    System.out.println("Неверный выбор.");
+                    return;
+            }
+
+            if (filter == null) {
+                System.out.println("Пустой запрос — поиск отменён.");
+                return;
+            }
+
+            List<RoleAssignment> results = system.getAssignmentManager().findByFilter(filter);
+            if (results.isEmpty()) {
+                System.out.println("\nНет назначений, соответствующих фильтру.");
+            } else {
+                System.out.println("\nНайдено " + results.size() + " назначение(ий):");
+                System.out.printf("%-15s | %-20s | %-12s | %-10s | %s%n",
+                        "Username", "Роль", "Тип", "Статус", "Назначено");
+                System.out.println("-".repeat(85));
+                for (RoleAssignment a : results) {
+                    String username = a.user().username();
+                    String roleName = a.role().name();
+                    String type = (a instanceof PermanentAssignment) ? "Постоянное" : "Временное";
+                    String status = a.isActive() ? "Активно" : "Неактивно";
+                    String assignedAt = a.metadata().assignedAt();
+
+                    System.out.printf("%-15s | %-20s | %-12s | %-10s | %s%n",
+                            username, roleName, type, status, assignedAt);
+                }
             }
         });
     }

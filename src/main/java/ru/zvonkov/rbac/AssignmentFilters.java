@@ -47,6 +47,10 @@ public final class AssignmentFilters {
         return assignment -> !assignment.isActive();
     }
 
+    public static AssignmentFilter byStatus(boolean active) {
+        return active ? activeOnly() : inactiveOnly();
+    }
+
     public static AssignmentFilter byType(String type) {
         if (type == null || type.trim().isEmpty()) {
             throw new IllegalArgumentException("Type must not be null or empty");
@@ -89,7 +93,7 @@ public final class AssignmentFilters {
             }
             TemporaryAssignment temp = (TemporaryAssignment) assignment;
             try {
-                LocalDateTime expiresAt = LocalDateTime.parse(temp.getExpiresAt(), FORMATTER);
+                LocalDateTime expiresAt = LocalDateTime.parse(temp.expiresAt(), FORMATTER);
                 return expiresAt.isBefore(targetDate);
             } catch (Exception e) {
                 return false;
