@@ -40,6 +40,7 @@ public class CommandRegistry {
         registerRevokeRole(parser);
         registerAssignmentList(parser);
         registerAssignmentListUser(parser);
+        registerAssignmentListRole(parser);
 
         // === Команды просмотра прав ===
     }
@@ -947,6 +948,44 @@ public class CommandRegistry {
                 System.out.println("   Статус: " + (a.isActive() ? "Активно" : "Неактивно"));
                 System.out.println("   Назначено: " + a.metadata().assignedAt());
                 System.out.println("   Причина: " + a.metadata().reason());
+
+                if (a instanceof TemporaryAssignment) {
+                    System.out.println("   Истекает: " + ((TemporaryAssignment) a).expiresAt());
+                }
+            }
+            System.out.println("=".repeat(50));
+        });
+    }
+
+    private static void registerAssignmentListRole(CommandParser parser) {
+        parser.registerCommand("assignment-list-role", "Пользователи с конкретной ролью", (scanner, system) -> {
+            System.out.print("\nВведите название роли: ");
+            String roleName = scanner.nextLine().trim();
+            if (roleName.isEmpty()) {
+                System.out.println("Название роли не может быть пустым.");
+                return;
+            }
+
+            Optional<Role> roleOpt = system.getRoleManager().findByName(roleName);
+            if (roleOpt.isEmpty()) {
+                System.out.println("Роль '" + roleName + "' не найдена.");
+                return;
+            }
+            Role role = roleOpt.get();
+
+            List<RoleAssignment> assignments = system.getAssignmentManager().findByRole(role);
+            if (assignments.isEmpty()) {
+                System.out.println("Роль '" + roleName + "' не назначена ни одному пользователю.");
+                return;
+            }
+
+            System.out.println("\n=== Пользователи с ролью '" + roleName + "' ===");
+            for (int i = 0; i < assignments.size(); i++) {
+                RoleAssignment a = assignments.get(i);
+                System.out.printf("\n%d. Username: %s\n", i + 1, a.user().username());
+                System.out.println("   Статус: " + (a.isActive() ? "Активно" : "Неактивно"));
+                System.out.println("   Тип: " + (a instanceof PermanentAssignment ? "Постоянное" : "Временное"));
+                System.out.println("   Назначено: " + a.metadata().assignedAt());
 
                 if (a instanceof TemporaryAssignment) {
                     System.out.println("   Истекает: " + ((TemporaryAssignment) a).expiresAt());
