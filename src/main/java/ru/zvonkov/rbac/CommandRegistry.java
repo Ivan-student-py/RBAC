@@ -47,6 +47,7 @@ public class CommandRegistry {
         registerAssignmentSearch(parser);
 
         // === Команды просмотра прав ===
+        registerPermissionsUser(parser);
     }
 
     private static void registerHelp(CommandParser parser) {
@@ -1128,7 +1129,7 @@ public class CommandRegistry {
             System.out.println("2. По роли");
             System.out.println("3. По типу (постоянное/временное)");
             System.out.println("4. По статусу (активное/неактивное)");
-            System.out.println("5. Назначённые после даты");
+            System.out.println("5. Назначенные после даты");
             System.out.println("6. Истекающие до даты");
             System.out.print("Введите номер фильтра (1–6): ");
 
@@ -1206,6 +1207,45 @@ public class CommandRegistry {
                             username, roleName, type, status, assignedAt);
                 }
             }
+        });
+    }
+
+    private static void registerPermissionsUser(CommandParser parser) {
+        parser.registerCommand("permissions-user", "Все права конкретного пользователя", (scanner, system) -> {
+            System.out.print("\nВведите username пользователя: ");
+            String username = scanner.nextLine().trim();
+            if (username.isEmpty()) {
+                System.out.println("Username не может быть пустым.");
+                return;
+            }
+
+            Optional<User> userOpt = system.getUserManager().findByUsername(username);
+            if (userOpt.isEmpty()) {
+                System.out.println("Пользователь '" + username + "' не найден.");
+                return;
+            }
+            User user = userOpt.get();
+
+            Set<Permission> permissions = system.getAssignmentManager().getUserPermissions(user);
+            if (permissions.isEmpty()) {
+                System.out.println("У пользователя '" + username + "' нет прав доступа.");
+                return;
+            }
+
+            System.out.println("\n=== Права пользователя '" + username + "' ===");
+            Map<String, List<Permission>> byResource = new HashMap<>();
+            for (Permission p : permissions) {
+                byResource.computeIfAbsent(p.resource(), k -> new ArrayList<>()).add(p);
+            }
+
+            byResource.entrySet().stream()
+                    .sorted(Map.Entry.comparingByKey())
+                    .forEach(entry -> {
+                        System.out.println("\nРесурс: " + entry.getKey());
+                        entry.getValue().forEach(p ->
+                                System.out.println("  • " + p.name() + " — " + p.description()));
+                    });
+            System.out.println("=".repeat(50));
         });
     }
 
