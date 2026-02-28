@@ -69,7 +69,6 @@ public class RBACSystem {
             User adminUser = User.validate("admin", "System Administrator", "admin@rbac.local");
             userManager.add(adminUser);
 
-            // === 5. Назначение роли Admin администратору ===
             AssignmentMetadata meta = AssignmentMetadata.now("system", "Initial system setup");
             PermanentAssignment assignment = new PermanentAssignment(adminUser, adminRole, meta);
             assignmentManager.add(assignment);
@@ -107,7 +106,7 @@ public class RBACSystem {
         sb.append(String.format("Назначений всего: %d\n", totalAssignments));
         sb.append(String.format("  - Активных: %d\n", activeAssignments));
         sb.append(String.format("  - Истёкших: %d\n", expiredAssignments));
-        sb.append(String.format("Среднее количество ролей на пользователя: %.2f\n", avgRolesPerUser));
+        sb.append(String.format(java.util.Locale.US, "Среднее количество ролей на пользователя: %.2f\n", avgRolesPerUser));
 
         if (!topRoles.isEmpty()) {
             sb.append("Топ-3 самых популярных ролей:\n");
