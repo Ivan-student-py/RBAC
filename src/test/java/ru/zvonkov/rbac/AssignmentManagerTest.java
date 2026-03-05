@@ -68,4 +68,106 @@ public class AssignmentManagerTest {
         assertEquals(1, permissions.size());
         assertTrue(permissions.contains(readPerm));
     }
+
+    @Test
+    void testFindByUser() {
+        AssignmentMetadata meta = AssignmentMetadata.now("admin", "Test");
+        PermanentAssignment assign = new PermanentAssignment(user, role, meta);
+        assignmentManager.add(assign);
+
+        List<RoleAssignment> assignments = assignmentManager.findByUser(user);
+        assertEquals(1, assignments.size());
+        assertEquals(role.name(), assignments.get(0).role().name());
+    }
+
+    @Test
+    void testFindByRole() {
+        User bob = User.validate("bob", "Bob B", "bob@example.com");
+        userManager.add(bob);
+
+        AssignmentMetadata meta = AssignmentMetadata.now("admin", "Test");
+        PermanentAssignment assignAlice = new PermanentAssignment(user, role, meta);
+        PermanentAssignment assignBob = new PermanentAssignment(bob, role, meta);
+        assignmentManager.add(assignAlice);
+        assignmentManager.add(assignBob);
+
+        List<RoleAssignment> assignments = assignmentManager.findByRole(role);
+        assertEquals(2, assignments.size());
+    }
+
+    @Test
+    void testGetActiveAssignments() {
+        AssignmentMetadata meta = AssignmentMetadata.now("admin", "Test");
+        PermanentAssignment assign = new PermanentAssignment(user, role, meta);
+        assignmentManager.add(assign);
+
+        List<RoleAssignment> active = assignmentManager.getActiveAssignments();
+        assertEquals(1, active.size());
+        assertTrue(active.get(0).isActive());
+    }
+
+    @Test
+    void testGetExpiredAssignments() {
+        User bob = User.validate("bob", "Bob B", "bob@example.com");
+        userManager.add(bob);
+
+        AssignmentMetadata meta = AssignmentMetadata.now("admin", "Test");
+        PermanentAssignment active = new PermanentAssignment(user, role, meta);
+        assignmentManager.add(active);
+
+        String pastDate = "2000-01-01 00:00";
+        TemporaryAssignment expired = new TemporaryAssignment(bob, role, meta, pastDate, false);
+        assignmentManager.add(expired);
+
+        List<RoleAssignment> expiredList = assignmentManager.getExpiredAssignments();
+        assertEquals(1, expiredList.size());
+        assertFalse(expiredList.get(0).isActive());
+    }
+
+    @Test
+    void testRevokeAssignment() {
+        AssignmentMetadata meta = AssignmentMetadata.now("admin", "Test");
+        PermanentAssignment assign = new PermanentAssignment(user, role, meta);
+        assignmentManager.add(assign);
+
+        assignmentManager.revokeAssignment(assign.assignmentId());
+
+        List<RoleAssignment> active = assignmentManager.getActiveAssignments();
+        assertEquals(0, active.size());
+    }
+
+    @Test
+    void testExtendTemporaryAssignment() {
+        String expiresAt = "2025-12-31 23:59";
+        AssignmentMetadata meta = AssignmentMetadata.now("admin", "Test");
+        TemporaryAssignment assign = new TemporaryAssignment(user, role, meta, expiresAt, false);
+        assignmentManager.add(assign);
+
+        String newExpiresAt = "2030-12-31 23:59";
+        assignmentManager.extendTemporaryAssignment(assign.assignmentId(), newExpiresAt);
+
+        List<RoleAssignment> active = assignmentManager.getActiveAssignments();
+        assertEquals(1, active.size());
+    }
+
+    @Test
+    void testFindAllWithFilterAndSorter() {
+        User bob = User.validate("bob", "Bob B", "bob@example.com");
+        userManager.add(bob);
+
+        Role admin = new Role("Admin", "Full access");
+        admin.addPermission(new Permission("write", "data", "Write data"));
+        roleManager.add(admin);
+
+        AssignmentMetadata meta = AssignmentMetadata.now("admin", "Test");
+        PermanentAssignment assignViewer = new PermanentAssignment(user, role, meta);
+        PermanentAssignment assignAdmin = new PermanentAssignment(bob, admin, meta);
+        assignmentManager.add(assignViewer);
+        assignmentManager.add(assignAdmin);
+
+        var filter = AssignmentFilters.byRoleName("Viewer");
+        List<RoleAssignment> filtered = assignmentManager.findAll(filter, AssignmentSorters.byUsername());
+        assertEquals(1, filtered.size());
+        assertEquals("Viewer", filtered.get(0).role().name());
+    }
 }
