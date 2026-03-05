@@ -4,7 +4,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public record AssignmentMetadata(String assignedBy, String assignedAt, String reason) {
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
     public static AssignmentMetadata now(String assignedBy, String reason) {
         if (assignedBy == null || assignedBy.trim().isEmpty()) {
             throw new IllegalArgumentException("Assigned by must not be null or empty");
