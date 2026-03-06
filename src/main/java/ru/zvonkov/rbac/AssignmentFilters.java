@@ -17,9 +17,7 @@ public final class AssignmentFilters {
     }
 
     public static AssignmentFilter byUsername(String username) {
-        if (username == null || username.trim().isEmpty()) {
-            throw new IllegalArgumentException("Username must not be null or empty");
-        }
+        ValidationUtils.requireNonEmpty(username, "Username");
         String clean = username.trim();
         return assignment -> clean.equals(assignment.user().username());
     }
@@ -32,9 +30,7 @@ public final class AssignmentFilters {
     }
 
     public static AssignmentFilter byRoleName(String roleName) {
-        if (roleName == null || roleName.trim().isEmpty()) {
-            throw new IllegalArgumentException("Role name must not be null or empty");
-        }
+        ValidationUtils.requireNonEmpty(roleName, "Role name");
         String clean = roleName.trim();
         return assignment -> clean.equals(assignment.role().name());
     }
@@ -52,25 +48,19 @@ public final class AssignmentFilters {
     }
 
     public static AssignmentFilter byType(String type) {
-        if (type == null || type.trim().isEmpty()) {
-            throw new IllegalArgumentException("Type must not be null or empty");
-        }
+        ValidationUtils.requireNonEmpty(type, "Type");
         String clean = type.trim().toUpperCase();
         return assignment -> clean.equals(assignment.assignmentType());
     }
 
     public static AssignmentFilter assignedBy(String username) {
-        if (username == null || username.trim().isEmpty()) {
-            throw new IllegalArgumentException("Assigned by username must not be null or empty");
-        }
+        ValidationUtils.requireNonEmpty(username, "Assigned by username");
         String clean = username.trim();
         return assignment -> clean.equals(assignment.metadata().assignedBy());
     }
 
     public static AssignmentFilter assignedAfter(String dateStr) {
-        if (dateStr == null || dateStr.trim().isEmpty()) {
-            throw new IllegalArgumentException("Date must not be null or empty");
-        }
+        ValidationUtils.requireNonEmpty(dateStr, "Date");
         LocalDateTime targetDate = LocalDateTime.parse(dateStr, FORMATTER);
         return assignment -> {
             try {
@@ -83,9 +73,7 @@ public final class AssignmentFilters {
     }
 
     public static AssignmentFilter expiringBefore(String dateStr) {
-        if (dateStr == null || dateStr.trim().isEmpty()) {
-            throw new IllegalArgumentException("Date must not be null or empty");
-        }
+        ValidationUtils.requireNonEmpty(dateStr, "Date");
         LocalDateTime targetDate = LocalDateTime.parse(dateStr, FORMATTER);
         return assignment -> {
             if (!(assignment instanceof TemporaryAssignment)) {
