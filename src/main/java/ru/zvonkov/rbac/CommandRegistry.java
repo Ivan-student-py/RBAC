@@ -94,15 +94,14 @@ public class CommandRegistry {
                 return;
             }
 
-            System.out.printf("%-20s | %-25s | %s%n", "Username", "Full Name", "Email");
-            System.out.println("-".repeat(70));
+            String[] headers = {"Username", "Full Name", "Email"};
+            List<String[]> rows = new ArrayList<>();
             for (User user : users) {
-                System.out.printf("%-20s | %-25s | %s%n",
-                        user.username(),
-                        user.fullName(),
-                        user.email());
+                rows.add(new String[]{user.username(), user.fullName(), user.email()});
             }
-            System.out.println("=".repeat(70));
+
+            String table = FormatUtils.formatTable(headers, rows);
+            System.out.println(table);
         });
     }
 
@@ -333,14 +332,19 @@ public class CommandRegistry {
             if (results.isEmpty()) {
                 System.out.println("\nНет пользователей, соответствующих фильтру.");
             } else {
-                System.out.println("\nНайдено " + results.size() + " пользователь(ей):");
-                System.out.printf("%-20s | %-25s | %s%n", "Username", "Full Name", "Email");
-                System.out.println("-".repeat(70));
-                for (User user : results) {
-                    System.out.printf("%-20s | %-25s | %s%n",
-                            user.username(),
-                            user.fullName(),
-                            user.email());
+                if (results.isEmpty()) {
+                    System.out.println("\nНет пользователей, соответствующих фильтру.");
+                } else {
+                    System.out.println("\nНайдено " + results.size() + " пользователь(ей):");
+
+                    String[] headers = {"Username", "Full Name", "Email"};
+                    List<String[]> rows = new ArrayList<>();
+                    for (User user : results) {
+                        rows.add(new String[]{user.username(), user.fullName(), user.email()});
+                    }
+
+                    String table = FormatUtils.formatTable(headers, rows);
+                    System.out.println(table);
                 }
             }
         });
@@ -355,15 +359,16 @@ public class CommandRegistry {
                 return;
             }
 
-            System.out.printf("%-25s | %-10s | %s%n", "Название роли", "Права", "ID");
-            System.out.println("-".repeat(65));
+            String[] headers = {"Название роли", "Права", "ID"};
+            List<String[]> rows = new ArrayList<>();
             for (Role role : roles) {
-                System.out.printf("%-25s | %-10d | %s%n",
-                        role.name(),
-                        role.getPermissions().size(),
-                        role.id());
+                rows.add(new String[]{role.name(),
+                        String.valueOf(role.getPermissions().size()),
+                        role.id()});
             }
-            System.out.println("=".repeat(65));
+
+            String table = FormatUtils.formatTable(headers, rows);
+            System.out.println(table);
         });
     }
 
@@ -710,14 +715,23 @@ public class CommandRegistry {
             if (results.isEmpty()) {
                 System.out.println("\nНет ролей, соответствующих фильтру.");
             } else {
-                System.out.println("\nНайдено " + results.size() + " роль(ей):");
-                System.out.printf("%-25s | %-10s | %s%n", "Название роли", "Права", "ID");
-                System.out.println("-".repeat(65));
-                for (Role role : results) {
-                    System.out.printf("%-25s | %-10d | %s%n",
-                            role.name(),
-                            role.getPermissions().size(),
-                            role.id());
+                if (results.isEmpty()) {
+                    System.out.println("\nНет ролей, соответствующих фильтру.");
+                } else {
+                    System.out.println("\nНайдено " + results.size() + " роль(ей):");
+
+                    String[] headers = {"Название роли", "Права", "ID"};
+                    List<String[]> rows = new ArrayList<>();
+                    for (Role role : results) {
+                        rows.add(new String[]{
+                                role.name(),
+                                String.valueOf(role.getPermissions().size()),
+                                role.id()
+                        });
+                    }
+
+                    String table = FormatUtils.formatTable(headers, rows);
+                    System.out.println(table);
                 }
             }
         });
@@ -875,21 +889,20 @@ public class CommandRegistry {
                 return;
             }
 
-            System.out.printf("%-15s | %-20s | %-12s | %-10s | %s%n",
-                    "Username", "Роль", "Тип", "Статус", "Назначено");
-            System.out.println("-".repeat(85));
-
+            String[] headers = {"Username", "Роль", "Тип", "Статус", "Назначено"};
+            List<String[]> rows = new ArrayList<>();
             for (RoleAssignment a : assignments) {
-                String username = a.user().username();
-                String roleName = a.role().name();
                 String type = (a instanceof PermanentAssignment) ? "Постоянное" : "Временное";
                 String status = a.isActive() ? "Активно" : "Неактивно";
-                String assignedAt = a.metadata().assignedAt();
-
-                System.out.printf("%-15s | %-20s | %-12s | %-10s | %s%n",
-                        username, roleName, type, status, assignedAt);
+                rows.add(new String[]{a.user().username(),
+                        a.role().name(),
+                        type,
+                        status,
+                        a.metadata().assignedAt()});
             }
-            System.out.println("=".repeat(85));
+
+            String table = FormatUtils.formatTable(headers, rows);
+            System.out.println(table);
         });
     }
 
@@ -915,20 +928,30 @@ public class CommandRegistry {
                 return;
             }
 
-            System.out.println("\n=== Назначения пользователя '" + username + "' ===");
+            String[] headers = {"#", "Роль", "Тип", "Статус", "Назначено", "Причина", "Истекает"};
+            List<String[]> rows = new ArrayList<>();
             for (int i = 0; i < assignments.size(); i++) {
                 RoleAssignment a = assignments.get(i);
-                System.out.printf("\n%d. Роль: %s\n", i + 1, a.role().name());
-                System.out.println("   Тип: " + (a instanceof PermanentAssignment ? "Постоянное" : "Временное"));
-                System.out.println("   Статус: " + (a.isActive() ? "Активно" : "Неактивно"));
-                System.out.println("   Назначено: " + a.metadata().assignedAt());
-                System.out.println("   Причина: " + a.metadata().reason());
+                String type = (a instanceof PermanentAssignment) ? "Постоянное" : "Временное";
+                String status = a.isActive() ? "Активно" : "Неактивно";
+                String expires = (a instanceof TemporaryAssignment)
+                        ? ((TemporaryAssignment) a).expiresAt()
+                        : "-";
 
-                if (a instanceof TemporaryAssignment) {
-                    System.out.println("   Истекает: " + ((TemporaryAssignment) a).expiresAt());
-                }
+                rows.add(new String[]{
+                        String.valueOf(i + 1),
+                        a.role().name(),
+                        type,
+                        status,
+                        a.metadata().assignedAt(),
+                        a.metadata().reason() != null ? a.metadata().reason() : "-",
+                        expires
+                });
             }
-            System.out.println("=".repeat(50));
+
+            System.out.println(FormatUtils.formatHeader("Назначения пользователя '" + username + "'"));
+            String table = FormatUtils.formatTable(headers, rows);
+            System.out.println(table);
         });
     }
 
@@ -954,19 +977,29 @@ public class CommandRegistry {
                 return;
             }
 
-            System.out.println("\n=== Пользователи с ролью '" + roleName + "' ===");
+            String[] headers = {"#", "Username", "Статус", "Тип", "Назначено", "Истекает"};
+            List<String[]> rows = new ArrayList<>();
             for (int i = 0; i < assignments.size(); i++) {
                 RoleAssignment a = assignments.get(i);
-                System.out.printf("\n%d. Username: %s\n", i + 1, a.user().username());
-                System.out.println("   Статус: " + (a.isActive() ? "Активно" : "Неактивно"));
-                System.out.println("   Тип: " + (a instanceof PermanentAssignment ? "Постоянное" : "Временное"));
-                System.out.println("   Назначено: " + a.metadata().assignedAt());
+                String type = (a instanceof PermanentAssignment) ? "Постоянное" : "Временное";
+                String status = a.isActive() ? "Активно" : "Неактивно";
+                String expires = (a instanceof TemporaryAssignment)
+                        ? ((TemporaryAssignment) a).expiresAt()
+                        : "-";
 
-                if (a instanceof TemporaryAssignment) {
-                    System.out.println("   Истекает: " + ((TemporaryAssignment) a).expiresAt());
-                }
+                rows.add(new String[]{
+                        String.valueOf(i + 1),
+                        a.user().username(),
+                        status,
+                        type,
+                        a.metadata().assignedAt(),
+                        expires
+                });
             }
-            System.out.println("=".repeat(50));
+
+            System.out.println(FormatUtils.formatHeader("Пользователи с ролью '" + roleName + "'"));
+            String table = FormatUtils.formatTable(headers, rows);
+            System.out.println(table);
         });
     }
 
@@ -979,20 +1012,21 @@ public class CommandRegistry {
                 return;
             }
 
-            System.out.printf("%-15s | %-20s | %-12s | %s%n",
-                    "Username", "Роль", "Тип", "Назначено");
-            System.out.println("-".repeat(70));
-
+            String[] headers = {"Username", "Роль", "Тип", "Назначено"};
+            List<String[]> rows = new ArrayList<>();
             for (RoleAssignment a : activeAssignments) {
-                String username = a.user().username();
-                String roleName = a.role().name();
                 String type = (a instanceof PermanentAssignment) ? "Постоянное" : "Временное";
-                String assignedAt = a.metadata().assignedAt();
-
-                System.out.printf("%-15s | %-20s | %-12s | %s%n",
-                        username, roleName, type, assignedAt);
+                rows.add(new String[]{
+                        a.user().username(),
+                        a.role().name(),
+                        type,
+                        a.metadata().assignedAt()
+                });
             }
-            System.out.println("=".repeat(70));
+
+            System.out.println(FormatUtils.formatHeader("Активные назначения"));
+            String table = FormatUtils.formatTable(headers, rows);
+            System.out.println(table);
         });
     }
 
@@ -1005,22 +1039,24 @@ public class CommandRegistry {
                 return;
             }
 
-            System.out.printf("%-15s | %-20s | %-12s | %-20s | %s%n",
-                    "Username", "Роль", "Тип", "Назначено", "Истекло");
-            System.out.println("-".repeat(90));
-
+            String[] headers = {"Username", "Роль", "Тип", "Назначено", "Истекло"};
+            List<String[]> rows = new ArrayList<>();
             for (RoleAssignment a : expiredAssignments) {
                 if (!(a instanceof TemporaryAssignment)) continue;
 
-                String username = a.user().username();
-                String roleName = a.role().name();
-                String assignedAt = a.metadata().assignedAt();
-                String expiredAt = ((TemporaryAssignment) a).expiresAt();
-
-                System.out.printf("%-15s | %-20s | %-12s | %-20s | %s%n",
-                        username, roleName, "Временное", assignedAt, expiredAt);
+                TemporaryAssignment temp = (TemporaryAssignment) a;
+                rows.add(new String[]{
+                        a.user().username(),
+                        a.role().name(),
+                        "Временное",
+                        a.metadata().assignedAt(),
+                        temp.expiresAt()
+                });
             }
-            System.out.println("=".repeat(90));
+
+            System.out.println(FormatUtils.formatHeader("Истёкшие временные назначения"));
+            String table = FormatUtils.formatTable(headers, rows);
+            System.out.println(table);
         });
     }
 
@@ -1149,19 +1185,27 @@ public class CommandRegistry {
             if (results.isEmpty()) {
                 System.out.println("\nНет назначений, соответствующих фильтру.");
             } else {
-                System.out.println("\nНайдено " + results.size() + " назначение(ий):");
-                System.out.printf("%-15s | %-20s | %-12s | %-10s | %s%n",
-                        "Username", "Роль", "Тип", "Статус", "Назначено");
-                System.out.println("-".repeat(85));
-                for (RoleAssignment a : results) {
-                    String username = a.user().username();
-                    String roleName = a.role().name();
-                    String type = (a instanceof PermanentAssignment) ? "Постоянное" : "Временное";
-                    String status = a.isActive() ? "Активно" : "Неактивно";
-                    String assignedAt = a.metadata().assignedAt();
+                if (results.isEmpty()) {
+                    System.out.println("\nНет назначений, соответствующих фильтру.");
+                } else {
+                    System.out.println("\nНайдено " + results.size() + " назначение(ий):");
 
-                    System.out.printf("%-15s | %-20s | %-12s | %-10s | %s%n",
-                            username, roleName, type, status, assignedAt);
+                    String[] headers = {"Username", "Роль", "Тип", "Статус", "Назначено"};
+                    List<String[]> rows = new ArrayList<>();
+                    for (RoleAssignment a : results) {
+                        String type = (a instanceof PermanentAssignment) ? "Постоянное" : "Временное";
+                        String status = a.isActive() ? "Активно" : "Неактивно";
+                        rows.add(new String[]{
+                                a.user().username(),
+                                a.role().name(),
+                                type,
+                                status,
+                                a.metadata().assignedAt()
+                        });
+                    }
+
+                    String table = FormatUtils.formatTable(headers, rows);
+                    System.out.println(table);
                 }
             }
         });
@@ -1195,14 +1239,21 @@ public class CommandRegistry {
                 byResource.computeIfAbsent(p.resource(), k -> new ArrayList<>()).add(p);
             }
 
+            if (permissions.isEmpty()) {
+                System.out.println("У пользователя '" + username + "' нет прав доступа.");
+                return;
+            }
+
+            System.out.println(FormatUtils.formatHeader("Права пользователя '" + username + "'"));
+
             byResource.entrySet().stream()
                     .sorted(Map.Entry.comparingByKey())
                     .forEach(entry -> {
-                        System.out.println("\nРесурс: " + entry.getKey());
-                        entry.getValue().forEach(p ->
-                                System.out.println("  • " + p.name() + " — " + p.description()));
+                        System.out.println("\n" + FormatUtils.formatBox("Ресурс: " + entry.getKey()));
+                        for (Permission p : entry.getValue()) {
+                            System.out.println("  . " + p.name() + " — " + p.description());
+                        }
                     });
-            System.out.println("=".repeat(50));
         });
     }
 
