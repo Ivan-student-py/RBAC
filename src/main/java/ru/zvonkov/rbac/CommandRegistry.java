@@ -209,14 +209,14 @@ public class CommandRegistry {
             System.out.println("  Email: " + current.email());
 
             try {
-                System.out.print("Введите новое полное имя (оставьте пустым, чтобы оставить без изменений): ");
-                String newFullName = scanner.nextLine().trim();
+                String newFullName = ConsoleUtils.promptString(scanner,
+                        "Введите новое полное имя (оставьте пустым, чтобы оставить без изменений):", false);
                 if (newFullName.isEmpty()) {
                     newFullName = current.fullName();
                 }
 
-                System.out.print("Введите новый email (оставьте пустым, чтобы оставить без изменений): ");
-                String newEmail = scanner.nextLine().trim();
+                String newEmail = ConsoleUtils.promptString(scanner,
+                        "Введите новый email (оставьте пустым, чтобы оставить без изменений):", false);
                 if (newEmail.isEmpty()) {
                     newEmail = current.email();
                 }
@@ -260,9 +260,8 @@ public class CommandRegistry {
                 System.out.println("Все назначения будут удалены автоматически.");
             }
 
-            System.out.print("\nПодтвердите удаление (введите \"да\"): ");
-            String confirm = scanner.nextLine().trim();
-            if (!"да".equals(confirm)) {
+            boolean confirmed = ConsoleUtils.promptYesNo(scanner, "\nПодтвердите удаление");
+            if (!confirmed) {
                 System.out.println("Удаление отменено.");
                 return;
             }
@@ -382,15 +381,9 @@ public class CommandRegistry {
             System.out.println("\n=== Создание новой роли ===");
 
             try {
-                System.out.print("Введите название роли: ");
-                String name = scanner.nextLine().trim();
-                if (name.isEmpty()) {
-                    System.out.println("Название роли не может быть пустым.");
-                    return;
-                }
-
-                System.out.print("Введите описание роли: ");
-                String description = scanner.nextLine().trim();
+                String name = ConsoleUtils.promptString(scanner, "Введите название роли:", true);
+                String description = ConsoleUtils.promptString(scanner,
+                        "Введите описание роли (оставьте пустым для 'Без описания'):", false);
                 if (description.isEmpty()) {
                     description = "Без описания";
                 }
