@@ -136,9 +136,7 @@ public class AssignmentManager implements Repository<RoleAssignment> {
     }
 
     public void revokeAssignment(String assignmentId) {
-        if (assignmentId == null || assignmentId.trim().isEmpty()) {
-            throw new IllegalArgumentException("Assignment ID must not be null or empty");
-        }
+        ValidationUtils.requireNonEmpty(assignmentId, "Assignment ID");
         RoleAssignment assignment = assignments.get(assignmentId.trim());
         if (assignment == null) {
             throw new IllegalArgumentException("Assignment not found: " + assignmentId);
@@ -151,18 +149,14 @@ public class AssignmentManager implements Repository<RoleAssignment> {
     }
 
     public void extendTemporaryAssignment(String assignmentId, String newExpirationDate) {
-        if (assignmentId == null || assignmentId.trim().isEmpty()) {
-            throw new IllegalArgumentException("Assignment ID must not be null or empty");
-        }
-        if (newExpirationDate == null || newExpirationDate.trim().isEmpty()) {
-            throw new IllegalArgumentException("New expiration date must not be null or empty");
-        }
+        ValidationUtils.requireNonEmpty(assignmentId, "Assignment ID");
+        ValidationUtils.requireNonEmpty(newExpirationDate, "New expiration date");
         RoleAssignment assignment = assignments.get(assignmentId.trim());
         if (assignment == null) {
             throw new IllegalArgumentException("Assignment not found: " + assignmentId);
         }
         if (assignment instanceof TemporaryAssignment) {
-            ((TemporaryAssignment) assignment).extendMinutesUntil(newExpirationDate); // ← нужно реализовать в TemporaryAssignment
+            ((TemporaryAssignment) assignment).extendMinutesUntil(newExpirationDate.trim());
         } else {
             throw new IllegalArgumentException("Only temporary assignments can be extended");
         }

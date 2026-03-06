@@ -7,9 +7,7 @@ public record AssignmentMetadata(String assignedBy, String assignedAt, String re
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     public static AssignmentMetadata now(String assignedBy, String reason) {
-        if (assignedBy == null || assignedBy.trim().isEmpty()) {
-            throw new IllegalArgumentException("Assigned by must not be null or empty");
-        }
+        ValidationUtils.requireNonEmpty(assignedBy, "Assigned by");
         String currentTime = LocalDateTime.now().format(FORMATTER);
         return new AssignmentMetadata(assignedBy.trim(), currentTime, reason);
     }
