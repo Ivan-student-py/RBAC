@@ -49,6 +49,7 @@ public class CommandRegistry {
         // === Команды просмотра прав ===
         registerPermissionsUser(parser);
         registerPermissionsCheck(parser);
+        registerAuditLog(parser);
     }
 
     private static void registerHelp(CommandParser parser) {
@@ -1303,6 +1304,19 @@ public class CommandRegistry {
             } else {
                 System.out.println("Право обнаружено, но источник не определён.");
             }
+        });
+    }
+
+    private static void registerAuditLog(CommandParser parser) {
+        parser.registerCommand("audit-log", "Просмотреть лог аудита всех действий", (scanner, system) -> {
+            System.out.println("\n=== Лог аудита ===");
+            AuditLog auditLog = system.getAuditLog();
+            if (auditLog.getAll().isEmpty()) {
+                System.out.println("Лог аудита пуст.");
+            } else {
+                auditLog.printLog();
+            }
+            System.out.println("=".repeat(50));
         });
     }
 }
