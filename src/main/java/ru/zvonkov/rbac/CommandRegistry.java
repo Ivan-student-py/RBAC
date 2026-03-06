@@ -293,40 +293,31 @@ public class CommandRegistry {
             System.out.println("2. По email (содержит)");
             System.out.println("3. По домену email (например, @example.com)");
             System.out.println("4. По полному имени (содержит)");
-            System.out.print("Введите номер фильтра (1–4): ");
 
-            String choice = scanner.nextLine().trim();
+            int choice = ConsoleUtils.promptInt(scanner, "Введите номер фильтра", 1, 4);
             UserFilter filter = null;
 
             switch (choice) {
-                case "1":
-                    System.out.print("Введите подстроку для поиска в username: ");
-                    String substr1 = scanner.nextLine().trim();
-                    if (!substr1.isEmpty()) {
-                        filter = UserFilters.byUsernameContains(substr1);
-                    }
+                case 1:
+                    String substr1 = ConsoleUtils.promptString(scanner,
+                            "Введите подстроку для поиска в username:", true);
+                    filter = UserFilters.byUsernameContains(substr1);
                     break;
-                case "2":
-                    System.out.print("Введите подстроку для поиска в email: ");
-                    String substr2 = scanner.nextLine().trim();
-                    if (!substr2.isEmpty()) {
-                        filter = UserFilters.byEmailContains(substr2); // ← нужно добавить!
-                    }
+                case 2:
+                    String substr2 = ConsoleUtils.promptString(scanner,
+                            "Введите подстроку для поиска в email:", true);
+                    filter = UserFilters.byEmailContains(substr2);
                     break;
-                case "3":
-                    System.out.print("Введите домен email (например, @example.com): ");
-                    String domain = scanner.nextLine().trim();
-                    if (!domain.isEmpty()) {
-                        if (!domain.startsWith("@")) domain = "@" + domain;
-                        filter = UserFilters.byEmailDomain(domain);
-                    }
+                case 3:
+                    String domain = ConsoleUtils.promptString(scanner,
+                            "Введите домен email (например, @example.com):", true);
+                    if (!domain.startsWith("@")) domain = "@" + domain;
+                    filter = UserFilters.byEmailDomain(domain);
                     break;
-                case "4":
-                    System.out.print("Введите подстроку для поиска в полном имени: ");
-                    String substr4 = scanner.nextLine().trim();
-                    if (!substr4.isEmpty()) {
-                        filter = UserFilters.byFullNameContains(substr4);
-                    }
+                case 4:
+                    String substr4 = ConsoleUtils.promptString(scanner,
+                            "Введите подстроку для поиска в полном имени:", true);
+                    filter = UserFilters.byFullNameContains(substr4);
                     break;
                 default:
                     System.out.println("Неверный выбор.");
@@ -651,14 +642,9 @@ public class CommandRegistry {
                 System.out.printf("  %d. %s%n", i + 1, permList.get(i).format());
             }
 
-            System.out.print("\nВведите номер права для удаления (1–" + permList.size() + "): ");
-            String input = scanner.nextLine().trim();
             try {
-                int index = Integer.parseInt(input) - 1;
-                if (index < 0 || index >= permList.size()) {
-                    System.out.println("Неверный номер.");
-                    return;
-                }
+                int index = ConsoleUtils.promptInt(scanner,
+                        "\nВведите номер права для удаления", 1, permList.size()) - 1;
 
                 Permission permissionToRemove = permList.get(index);
                 system.getRoleManager().removePermissionFromRole(roleName, permissionToRemove);
@@ -685,48 +671,29 @@ public class CommandRegistry {
             System.out.println("1. По названию (содержит)");
             System.out.println("2. По наличию конкретного права");
             System.out.println("3. По минимальному количеству прав");
-            System.out.print("Введите номер фильтра (1–3): ");
 
-            String choice = scanner.nextLine().trim();
+            int choice = ConsoleUtils.promptInt(scanner, "Введите номер фильтра", 1, 3);
             RoleFilter filter = null;
 
             switch (choice) {
-                case "1":
-                    System.out.print("Введите подстроку для поиска в названии: ");
-                    String nameSubstr = scanner.nextLine().trim();
-                    if (!nameSubstr.isEmpty()) {
-                        filter = RoleFilters.byNameContains(nameSubstr);
-                    }
+                case 1:
+                    String nameSubstr = ConsoleUtils.promptString(scanner,
+                            "Введите подстроку для поиска в названии:", true);
+                    filter = RoleFilters.byNameContains(nameSubstr);
                     break;
 
-                case "2":
-                    System.out.print("Введите имя права (например, READ): ");
-                    String permName = scanner.nextLine().trim();
-                    System.out.print("Введите ресурс (например, users): ");
-                    String resource = scanner.nextLine().trim();
-                    if (!permName.isEmpty() && !resource.isEmpty()) {
-                        filter = RoleFilters.hasPermission(permName, resource);
-                    } else {
-                        System.out.println("Оба поля должны быть заполнены.");
-                        return;
-                    }
+                case 2:
+                    String permName = ConsoleUtils.promptString(scanner,
+                            "Введите имя права (например, READ):", true);
+                    String resource = ConsoleUtils.promptString(scanner,
+                            "Введите ресурс (например, users):", true);
+                    filter = RoleFilters.hasPermission(permName, resource);
                     break;
 
-                case "3":
-                    System.out.print("Введите минимальное количество прав: ");
-                    String countStr = scanner.nextLine().trim();
-                    try {
-                        int minCount = Integer.parseInt(countStr);
-                        if (minCount >= 0) {
-                            filter = RoleFilters.minPermissions(minCount);
-                        } else {
-                            System.out.println("Минимальное количество не может быть отрицательным.");
-                            return;
-                        }
-                    } catch (NumberFormatException e) {
-                        System.out.println("Введите корректное число.");
-                        return;
-                    }
+                case 3:
+                    int minCount = ConsoleUtils.promptInt(scanner,
+                            "Введите минимальное количество прав", 0, Integer.MAX_VALUE);
+                    filter = RoleFilters.minPermissions(minCount);
                     break;
 
                 default:
@@ -877,14 +844,9 @@ public class CommandRegistry {
                         a.metadata().assignedAt());
             }
 
-            System.out.print("\nВыберите номер назначения для отзыва (1–" + activeAssignments.size() + "): ");
-            String input = scanner.nextLine().trim();
             try {
-                int index = Integer.parseInt(input) - 1;
-                if (index < 0 || index >= activeAssignments.size()) {
-                    System.out.println("Неверный номер.");
-                    return;
-                }
+                int index = ConsoleUtils.promptInt(scanner,
+                        "\nВыберите номер назначения для отзыва", 1, activeAssignments.size()) - 1;
 
                 RoleAssignment assignment = activeAssignments.get(index);
                 boolean success = system.getAssignmentManager().remove(assignment);
@@ -1113,12 +1075,8 @@ public class CommandRegistry {
             }
 
             System.out.println("Текущая дата истечения: " + target.expiresAt());
-            System.out.print("Введите новую дату истечения (формат: yyyy-MM-dd HH:mm): ");
-            String newExpiresAt = scanner.nextLine().trim();
-            if (newExpiresAt.isEmpty()) {
-                System.out.println("Дата истечения обязательна.");
-                return;
-            }
+            String newExpiresAt = ConsoleUtils.promptString(scanner,
+                    "Введите новую дату истечения (формат: yyyy-MM-dd HH:mm):", true);
 
             try {
                 system.getAssignmentManager().extendTemporaryAssignment(target.assignmentId(), newExpiresAt);
@@ -1143,52 +1101,39 @@ public class CommandRegistry {
             System.out.println("4. По статусу (активное/неактивное)");
             System.out.println("5. Назначенные после даты");
             System.out.println("6. Истекающие до даты");
-            System.out.print("Введите номер фильтра (1–6): ");
 
-            String choice = scanner.nextLine().trim();
+            int choice = ConsoleUtils.promptInt(scanner, "Введите номер фильтра", 1, 6);
             AssignmentFilter filter = null;
 
             switch (choice) {
-                case "1":
-                    System.out.print("Введите username: ");
-                    String user = scanner.nextLine().trim();
-                    if (!user.isEmpty()) {
-                        filter = a -> a.user().username().equals(user);
-                    }
+                case 1:
+                    String user = ConsoleUtils.promptString(scanner, "Введите username:", true);
+                    filter = a -> a.user().username().equals(user);
                     break;
-                case "2":
-                    System.out.print("Введите название роли: ");
-                    String role = scanner.nextLine().trim();
-                    if (!role.isEmpty()) {
-                        filter = a -> a.role().name().equals(role);
-                    }
+                case 2:
+                    String role = ConsoleUtils.promptString(scanner, "Введите название роли:", true);
+                    filter = a -> a.role().name().equals(role);
                     break;
-                case "3":
-                    System.out.print("Тип: 1 — постоянное, 2 — временное: ");
-                    String type = scanner.nextLine().trim();
-                    boolean isTemp = "2".equals(type);
+                case 3:
+                    int typeChoice = ConsoleUtils.promptInt(scanner, "Тип: 1 — постоянное, 2 — временное", 1, 2);
+                    boolean isTemp = typeChoice == 2;
                     filter = a -> (a instanceof TemporaryAssignment) == isTemp;
                     break;
-                case "4":
-                    System.out.print("Статус: 1 — активное, 2 — неактивное: ");
-                    String status = scanner.nextLine().trim();
-                    boolean active = "1".equals(status);
+                case 4:
+                    int statusChoice = ConsoleUtils.promptInt(scanner, "Статус: 1 — активное, 2 — неактивное", 1, 2);
+                    boolean active = statusChoice == 1;
                     filter = AssignmentFilters.byStatus(active);
                     break;
-                case "5":
-                    System.out.print("Дата (формат: yyyy-MM-dd HH:mm): ");
-                    String afterDate = scanner.nextLine().trim();
-                    if (!afterDate.isEmpty()) {
-                        filter = a -> a.metadata().assignedAt().compareTo(afterDate) > 0;
-                    }
+                case 5:
+                    String afterDate = ConsoleUtils.promptString(scanner,
+                            "Дата (формат: yyyy-MM-dd HH:mm):", true);
+                    filter = a -> a.metadata().assignedAt().compareTo(afterDate) > 0;
                     break;
-                case "6":
-                    System.out.print("Дата (формат: yyyy-MM-dd HH:mm): ");
-                    String beforeDate = scanner.nextLine().trim();
-                    if (!beforeDate.isEmpty()) {
-                        filter = a -> (a instanceof TemporaryAssignment) &&
-                                ((TemporaryAssignment) a).expiresAt().compareTo(beforeDate) < 0;
-                    }
+                case 6:
+                    String beforeDate = ConsoleUtils.promptString(scanner,
+                            "Дата (формат: yyyy-MM-dd HH:mm):", true);
+                    filter = a -> (a instanceof TemporaryAssignment) &&
+                            ((TemporaryAssignment) a).expiresAt().compareTo(beforeDate) < 0;
                     break;
                 default:
                     System.out.println("Неверный выбор.");
@@ -1277,19 +1222,11 @@ public class CommandRegistry {
             }
             User user = userOpt.get();
 
-            System.out.print("Введите имя права (например, READ): ");
-            String permName = scanner.nextLine().trim();
-            if (permName.isEmpty()) {
-                System.out.println("Имя права не может быть пустым.");
-                return;
-            }
+            String permName = ConsoleUtils.promptString(scanner,
+                    "Введите имя права (например, READ):", true);
 
-            System.out.print("Введите ресурс (например, users): ");
-            String resource = scanner.nextLine().trim();
-            if (resource.isEmpty()) {
-                System.out.println("Ресурс не может быть пустым.");
-                return;
-            }
+            String resource = ConsoleUtils.promptString(scanner,
+                    "Введите ресурс (например, users):", true);
 
             boolean hasPermission = system.getAssignmentManager().userHasPermission(user, permName, resource);
             if (!hasPermission) {
@@ -1340,11 +1277,9 @@ public class CommandRegistry {
             );
             System.out.println(report);
 
-            System.out.print("\nСохранить отчёт в файл? (да/нет): ");
-            String answer = scanner.nextLine().trim().toLowerCase();
-            if (answer.equals("да") || answer.equals("yes") || answer.equals("y")) {
-                System.out.print("Введите имя файла: ");
-                String filename = scanner.nextLine().trim();
+            boolean saveToFile = ConsoleUtils.promptYesNo(scanner, "\nСохранить отчёт в файл?");
+            if (saveToFile) {
+                String filename = ConsoleUtils.promptString(scanner, "Введите имя файла:", true);
                 if (!filename.isEmpty()) {
                     try {
                         generator.exportToFile(report, filename);
@@ -1368,11 +1303,9 @@ public class CommandRegistry {
             );
             System.out.println(report);
 
-            System.out.print("\nСохранить отчёт в файл? (да/нет): ");
-            String answer = scanner.nextLine().trim().toLowerCase();
-            if (answer.equals("да") || answer.equals("yes") || answer.equals("y")) {
-                System.out.print("Введите имя файла: ");
-                String filename = scanner.nextLine().trim();
+            boolean saveToFile = ConsoleUtils.promptYesNo(scanner, "\nСохранить отчёт в файл?");
+            if (saveToFile) {
+                String filename = ConsoleUtils.promptString(scanner, "Введите имя файла:", true);
                 if (!filename.isEmpty()) {
                     try {
                         generator.exportToFile(report, filename);
@@ -1396,11 +1329,9 @@ public class CommandRegistry {
             );
             System.out.println(report);
 
-            System.out.print("\nСохранить отчёт в файл? (да/нет): ");
-            String answer = scanner.nextLine().trim().toLowerCase();
-            if (answer.equals("да") || answer.equals("yes") || answer.equals("y")) {
-                System.out.print("Введите имя файла: ");
-                String filename = scanner.nextLine().trim();
+            boolean saveToFile = ConsoleUtils.promptYesNo(scanner, "\nСохранить отчёт в файл?");
+            if (saveToFile) {
+                String filename = ConsoleUtils.promptString(scanner, "Введите имя файла:", true);
                 if (!filename.isEmpty()) {
                     try {
                         generator.exportToFile(report, filename);
