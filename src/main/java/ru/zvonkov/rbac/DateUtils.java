@@ -9,6 +9,7 @@ public final class DateUtils {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter DATETIME_SHORT_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     private DateUtils() {}
 
@@ -18,6 +19,10 @@ public final class DateUtils {
 
     public static String getCurrentDateTime() {
         return LocalDateTime.now().format(DATETIME_FORMATTER);
+    }
+
+    public static String getCurrentDateTimeShort() {
+        return LocalDateTime.now().format(DATETIME_SHORT_FORMATTER);
     }
 
     public static boolean isBefore(String date1, String date2) {
@@ -40,6 +45,28 @@ public final class DateUtils {
         LocalDate d2 = LocalDate.parse(date2, DATE_FORMATTER);
 
         return d1.isAfter(d2);
+    }
+
+    public static boolean isAfterDateTime(String dateTime1, String dateTime2) {
+        if (dateTime1 == null || dateTime2 == null) {
+            throw new IllegalArgumentException("Dates cannot be null");
+        }
+
+        LocalDateTime d1 = LocalDateTime.parse(dateTime1, DATETIME_SHORT_FORMATTER);
+        LocalDateTime d2 = LocalDateTime.parse(dateTime2, DATETIME_SHORT_FORMATTER);
+
+        return d1.isAfter(d2);
+    }
+
+    public static boolean isBeforeDateTime(String dateTime1, String dateTime2) {
+        if (dateTime1 == null || dateTime2 == null) {
+            throw new IllegalArgumentException("Dates cannot be null");
+        }
+
+        LocalDateTime d1 = LocalDateTime.parse(dateTime1, DATETIME_SHORT_FORMATTER);
+        LocalDateTime d2 = LocalDateTime.parse(dateTime2, DATETIME_SHORT_FORMATTER);
+
+        return d1.isBefore(d2);
     }
 
     public static String addDays(String date, int days) {
