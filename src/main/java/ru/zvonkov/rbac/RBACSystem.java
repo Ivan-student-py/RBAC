@@ -18,6 +18,12 @@ public class RBACSystem {
         this.currentUser = "system";
     }
 
+    private final AuditLog auditLog = new AuditLog();
+
+    public AuditLog getAuditLog() {
+        return auditLog;
+    }
+
     public UserManager getUserManager() { return userManager; }
     public RoleManager getRoleManager() { return roleManager; }
     public AssignmentManager getAssignmentManager() { return assignmentManager; }
@@ -72,6 +78,7 @@ public class RBACSystem {
             AssignmentMetadata meta = AssignmentMetadata.now("system", "Initial system setup");
             PermanentAssignment assignment = new PermanentAssignment(adminUser, adminRole, meta);
             assignmentManager.add(assignment);
+            auditLog.log("system-init", "system", "admin", "Created admin user and assigned Admin role");
 
             System.out.println("Система инициализирована: созданы роли, пользователь 'admin' и назначение.");
         } catch (Exception e) {

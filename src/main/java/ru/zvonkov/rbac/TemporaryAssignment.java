@@ -11,9 +11,7 @@ public class TemporaryAssignment extends AbstractRoleAssignment {
 
     public TemporaryAssignment(User user, Role role, AssignmentMetadata metadata, String expiresAt, boolean autoRenew) {
         super(user, role, metadata);
-        if (expiresAt == null || expiresAt.trim().isEmpty()) {
-            throw new IllegalArgumentException("ExpiresAt must not be null or empty");
-        }
+        ValidationUtils.requireNonEmpty(expiresAt, "ExpiresAt");
         this.expiresAt = expiresAt.trim();
         this.autoRenew = autoRenew;
     }
@@ -47,9 +45,7 @@ public class TemporaryAssignment extends AbstractRoleAssignment {
     }
 
     public void extendMinutesUntil(String newExpirationDate) {
-        if (newExpirationDate == null || newExpirationDate.trim().isEmpty()) {
-            throw new IllegalArgumentException("New expiration date must not be null or empty");
-        }
+        ValidationUtils.requireNonEmpty(newExpirationDate, "New expiration date");
         this.expiresAt = newExpirationDate.trim();
     }
 
