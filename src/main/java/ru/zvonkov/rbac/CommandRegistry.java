@@ -556,9 +556,8 @@ public class CommandRegistry {
                 System.out.println("\nУдаление роли приведёт к потере этих назначений!");
             }
 
-            System.out.print("\nПодтвердите удаление (введите \"да\"): ");
-            String confirm = scanner.nextLine().trim();
-            if (!"да".equals(confirm)) {
+            boolean confirmed = ConsoleUtils.promptYesNo(scanner, "\nПодтвердите удаление");
+            if (!confirmed) {
                 System.out.println("Удаление отменено.");
                 return;
             }
@@ -594,22 +593,14 @@ public class CommandRegistry {
             }
 
             try {
-                System.out.print("Введите имя права (например, READ, WRITE): ");
-                String permName = scanner.nextLine().trim();
-                if (permName.isEmpty()) {
-                    System.out.println("Имя права не может быть пустым.");
-                    return;
-                }
+                String permName = ConsoleUtils.promptString(scanner,
+                        "Введите имя права (например, READ, WRITE):", true);
 
-                System.out.print("Введите ресурс (например, users, roles): ");
-                String resource = scanner.nextLine().trim();
-                if (resource.isEmpty()) {
-                    System.out.println("Ресурс не может быть пустым.");
-                    return;
-                }
+                String resource = ConsoleUtils.promptString(scanner,
+                        "Введите ресурс (например, users, roles):", true);
 
-                System.out.print("Введите описание права: ");
-                String description = scanner.nextLine().trim();
+                String description = ConsoleUtils.promptString(scanner,
+                        "Введите описание права (оставьте пустым для 'Без описания'):", false);
                 if (description.isEmpty()) {
                     description = "Без описания";
                 }
@@ -819,8 +810,8 @@ public class CommandRegistry {
                     }
                 }
 
-                System.out.print("Введите причину назначения: ");
-                String reason = scanner.nextLine().trim();
+                String reason = ConsoleUtils.promptString(scanner,
+                        "Введите причину назначения (оставьте пустым для 'Без указания причины'):", false);
                 if (reason.isEmpty()) {
                     reason = "Без указания причины";
                 }
