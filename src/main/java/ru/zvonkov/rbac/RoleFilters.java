@@ -5,17 +5,13 @@ public final class RoleFilters {
     private RoleFilters() {}
 
     public static RoleFilter byName(String name) {
-        if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("Role name must not be null or empty");
-        }
+        ValidationUtils.requireNonEmpty(name, "Role name");
         String clean = name.trim();
         return role -> clean.equals(role.name());
     }
 
     public static RoleFilter byNameContains(String substring) {
-        if (substring == null || substring.trim().isEmpty()) {
-            throw new IllegalArgumentException("Substring must not be null or empty");
-        }
+        ValidationUtils.requireNonEmpty(substring, "Substring");
         String clean = substring.trim().toLowerCase();
         return role -> role.name().toLowerCase().contains(clean);
     }
@@ -28,12 +24,8 @@ public final class RoleFilters {
     }
 
     public static RoleFilter hasPermission(String permissionName, String resource) {
-        if (permissionName == null || permissionName.trim().isEmpty()) {
-            throw new IllegalArgumentException("Permission name must not be null or empty");
-        }
-        if (resource == null || resource.trim().isEmpty()) {
-            throw new IllegalArgumentException("Resource must not be null or empty");
-        }
+        ValidationUtils.requireNonEmpty(permissionName, "Permission name");
+        ValidationUtils.requireNonEmpty(resource, "Resource");
         String cleanName = permissionName.trim();
         String cleanResource = resource.trim();
         return role -> role.hasPermission(cleanName, cleanResource);

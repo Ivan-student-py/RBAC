@@ -13,9 +13,7 @@ public class Role {
     }
 
     Role(String name, String description, String id, Collection<Permission> permissions) {
-        if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("Role name must not be null or empty");
-        }
+        ValidationUtils.requireNonEmpty(name, "Role name");
         this.name = name.trim();
         this.description = (description == null || description.trim().isEmpty())
                 ? "Без описания"

@@ -2,15 +2,9 @@ package ru.zvonkov.rbac;
 
 public record Permission(String name, String resource, String description) {
     public Permission {
-        if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("Permission name must not be null or empty");
-        }
-        if (resource == null || resource.trim().isEmpty()) {
-            throw new IllegalArgumentException("Resource must not be null or empty");
-        }
-        if (description == null || description.trim().isEmpty()) {
-            throw new IllegalArgumentException("Description must not be null or empty");
-        }
+        ValidationUtils.requireNonEmpty(name, "Permission name");
+        ValidationUtils.requireNonEmpty(resource, "Resource");
+        ValidationUtils.requireNonEmpty(description, "Description");
 
         name = name.trim().toUpperCase().replace(" ", "");
         resource = resource.trim().toLowerCase();
