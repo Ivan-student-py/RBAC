@@ -441,6 +441,10 @@ public class CommandRegistry {
                 }
 
                 system.getRoleManager().add(role);
+
+                system.getAuditLog().log("role-create", system.getCurrentUser(), name,
+                        "Created role: " + description + " with " + role.getPermissions().size() + " permissions");
+
                 System.out.println("\nРоль успешно сохранена в системе.");
                 System.out.println(role.format());
 
@@ -581,6 +585,9 @@ public class CommandRegistry {
             try {
                 boolean removed = system.getRoleManager().remove(role);
                 if (removed) {
+                    system.getAuditLog().log("role-delete", system.getCurrentUser(), roleName,
+                            "Deleted role with " + assignments.size() + " assignments");
+
                     System.out.println("Роль успешно удалена.");
                 } else {
                     System.out.println("Не удалось удалить роль.");
