@@ -111,26 +111,14 @@ public class CommandRegistry {
             System.out.println("\n=== Создание нового пользователя ===");
 
             try {
-                System.out.print("Введите username (3–20 символов, буквы, цифры, _): ");
-                String username = scanner.nextLine().trim();
-                if (username.isEmpty()) {
-                    System.out.println("Ошибка: username не может быть пустым.");
-                    return;
-                }
+                String username = ConsoleUtils.promptString(scanner,
+                        "Введите username (3–20 символов, буквы, цифры, _):", true);
 
-                System.out.print("Введите полное имя: ");
-                String fullName = scanner.nextLine().trim();
-                if (fullName.isEmpty()) {
-                    System.out.println("Ошибка: полное имя не может быть пустым.");
-                    return;
-                }
+                String fullName = ConsoleUtils.promptString(scanner,
+                        "Введите полное имя:", true);
 
-                System.out.print("Введите email: ");
-                String email = scanner.nextLine().trim();
-                if (email.isEmpty()) {
-                    System.out.println("Ошибка: email не может быть пустым.");
-                    return;
-                }
+                String email = ConsoleUtils.promptString(scanner,
+                        "Введите email:", true);
 
                 User user = User.validate(username, fullName, email);
                 system.getUserManager().add(user);
