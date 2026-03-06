@@ -135,6 +135,9 @@ public class CommandRegistry {
                 User user = User.validate(username, fullName, email);
                 system.getUserManager().add(user);
 
+                system.getAuditLog().log("user-create", system.getCurrentUser(), username,
+                        "Created user: " + fullName + " <" + email + ">");
+
                 System.out.println("Пользователь успешно создан:");
                 System.out.println(user.format());
 
@@ -263,7 +266,6 @@ public class CommandRegistry {
             System.out.println("Вы собираетесь удалить пользователя:");
             System.out.println(user.format());
 
-            // Получение всех назначений пользователя
             List<RoleAssignment> assignments = system.getAssignmentManager().findByUser(user);
             if (!assignments.isEmpty()) {
                 System.out.println("\n У пользователя есть " + assignments.size() + " назначений(е/ий).");
@@ -284,6 +286,8 @@ public class CommandRegistry {
 
                 boolean removed = system.getUserManager().remove(user);
                 if (removed) {
+                    system.getAuditLog().log("user-delete", system.getCurrentUser(), username,
+                            "Deleted user and " + assignments.size() + " assignments");
                     System.out.println("Пользователь и все его назначения успешно удалены.");
                 } else {
                     System.out.println("Не удалось удалить пользователя.");
