@@ -1150,6 +1150,10 @@ public class CommandRegistry {
 
             try {
                 system.getAssignmentManager().extendTemporaryAssignment(target.assignmentId(), newExpiresAt);
+
+                system.getAuditLog().log("assignment-extend", system.getCurrentUser(), username,
+                        "Extended role '" + roleName + "' until " + newExpiresAt);
+
                 System.out.println("Назначение успешно продлено до: " + newExpiresAt);
             } catch (Exception e) {
                 System.out.println("Ошибка при продлении: " + e.getMessage());
