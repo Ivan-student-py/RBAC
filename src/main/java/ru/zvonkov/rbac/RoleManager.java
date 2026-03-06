@@ -87,9 +87,7 @@ public class RoleManager implements Repository<Role> {
     }
 
     public void addPermissionToRole(String roleName, Permission permission) {
-        if (roleName == null || roleName.trim().isEmpty()) {
-            throw new IllegalArgumentException("Role name must not be null or empty");
-        }
+        ValidationUtils.requireNonEmpty(roleName, "Role name"); // ← ЗАМЕНА
         if (permission == null) {
             throw new IllegalArgumentException("Permission must not be null");
         }
@@ -101,9 +99,7 @@ public class RoleManager implements Repository<Role> {
     }
 
     public void removePermissionFromRole(String roleName, Permission permission) {
-        if (roleName == null || roleName.trim().isEmpty()) {
-            throw new IllegalArgumentException("Role name must not be null or empty");
-        }
+        ValidationUtils.requireNonEmpty(roleName, "Role name"); // ← ЗАМЕНА
         if (permission == null) {
             throw new IllegalArgumentException("Permission must not be null");
         }
@@ -115,12 +111,8 @@ public class RoleManager implements Repository<Role> {
     }
 
     public List<Role> findRolesWithPermission(String permissionName, String resource) {
-        if (permissionName == null || permissionName.trim().isEmpty()) {
-            throw new IllegalArgumentException("Permission name must not be null or empty");
-        }
-        if (resource == null || resource.trim().isEmpty()) {
-            throw new IllegalArgumentException("Resource must not be null or empty");
-        }
+        ValidationUtils.requireNonEmpty(permissionName, "Permission name"); // ← ЗАМЕНА
+        ValidationUtils.requireNonEmpty(resource, "Resource"); // ← ЗАМЕНА
         return rolesById.values().stream()
                 .filter(role -> role.hasPermission(permissionName.trim(), resource.trim()))
                 .collect(Collectors.toList());
