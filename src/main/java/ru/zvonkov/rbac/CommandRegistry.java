@@ -637,6 +637,10 @@ public class CommandRegistry {
                 system.getRoleManager().addPermissionToRole(roleName, permission);
 
                 System.out.println("Право успешно добавлено к роли '" + roleName + "':");
+
+                system.getAuditLog().log("role-add-permission", system.getCurrentUser(), roleName,
+                        "Added permission: " + permName + " on " + resource);
+
                 System.out.println("  " + permission.format());
 
             } catch (IllegalArgumentException e) {
@@ -688,6 +692,10 @@ public class CommandRegistry {
                 system.getRoleManager().removePermissionFromRole(roleName, permissionToRemove);
 
                 System.out.println("Право успешно удалено:");
+
+                system.getAuditLog().log("role-remove-permission", system.getCurrentUser(), roleName,
+                        "Removed permission: " + permissionToRemove.name() + " on " + permissionToRemove.resource());
+
                 System.out.println("  " + permissionToRemove.format());
 
             } catch (NumberFormatException e) {
@@ -845,6 +853,11 @@ public class CommandRegistry {
                 }
 
                 system.getAssignmentManager().add(assignment);
+
+                String assignmentType = isTemporary ? "TEMPORARY" : "PERMANENT";
+                system.getAuditLog().log("assign-role", system.getCurrentUser(), username,
+                        "Assigned role '" + selectedRole.name() + "' (" + assignmentType + ") with reason: " + reason);
+
                 System.out.println("Роль '" + selectedRole.name() + "' успешно назначена пользователю '" + username + "'.");
 
             } catch (NumberFormatException e) {
@@ -905,6 +918,9 @@ public class CommandRegistry {
                 boolean success = system.getAssignmentManager().remove(assignment);
 
                 if (success) {
+                    system.getAuditLog().log("revoke-role", system.getCurrentUser(), username,
+                            "Revoked role '" + assignment.role().name() + "' (assignment ID: " + assignment.assignmentId() + ")");
+
                     System.out.println("Назначение успешно отозвано.");
                 } else {
                     System.out.println("Не удалось отозвать назначение.");
