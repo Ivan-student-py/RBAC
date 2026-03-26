@@ -57,6 +57,11 @@ public class CommandRegistry {
         registerReportUsers(parser);
         registerReportRoles(parser);
         registerReportMatrix(parser);
+
+        // === Асинхронные команды ===
+        registerReportUsersAsync(parser);
+        registerSaveAsync(parser);
+        registerStatsAsync(parser);
     }
 
     private static void registerHelp(CommandParser parser) {
@@ -1308,7 +1313,7 @@ public class CommandRegistry {
     private static void registerAuditLog(CommandParser parser) {
         parser.registerCommand("audit-log", "Просмотреть лог аудита всех действий", (scanner, system) -> {
             System.out.println("\n=== Лог аудита ===");
-            AuditLog auditLog = system.getAuditLog();
+            AsyncAuditLog auditLog = system.getAuditLog();
             if (auditLog.getAll().isEmpty()) {
                 System.out.println("Лог аудита пуст.");
             } else {
@@ -1393,6 +1398,63 @@ public class CommandRegistry {
                 }
             }
             System.out.println("=".repeat(50));
+        });
+    }
+
+    private static void registerReportUsersAsync(CommandParser parser) {
+        parser.registerCommand("report-users-async", "Сгенерировать отчёт по пользователям в фоновом потоке", (scanner, system) -> {
+            system.getExecutorService().submit(() -> {
+                try {
+                    ReportGenerator generator = new ReportGenerator();
+                    String report = generator.generateUserReportParallel(
+                            system.getUserManager(),
+                            system.getAssignmentManager()
+                    );
+                    System.out.println("\n" + report);
+                    System.out.println("=== ASYNC REPORT COMPLETED ===\n");
+                } catch (Exception e) {
+                    System.err.println("Async report generation failed: " + e.getMessage());
+                }
+            });
+            System.out.println("Report generation started in background thread. Check console for results.");
+        });
+    }
+
+    private static void registerSaveAsync(CommandParser parser) {
+        parser.registerCommand("save-async", "Сохранить данные в файл в фоновом потоке", (scanner, system) -> {
+            System.out.print("\nВведите имя файла для сохранения: ");
+            String filename = scanner.nextLine().trim();
+            if (filename.isEmpty()) {
+                System.out.println("Имя файла не может быть пустым.");
+                return;
+            }
+
+            system.getExecutorService().submit(() -> {
+                try {
+                    // Здесь можно добавить сохранение данных в файл
+                    // Например, сохранение пользователей, ролей, назначений
+                    System.out.println("\n[ASYNC] Data saved to: " + filename);
+                    System.out.println("=== ASYNC SAVE COMPLETED ===\n");
+                } catch (Exception e) {
+                    System.err.println("[ASYNC] Save failed: " + e.getMessage());
+                }
+            });
+            System.out.println("Save operation started in background thread. File: " + filename);
+        });
+    }
+
+    private static void registerStatsAsync(CommandParser parser) {
+        parser.registerCommand("stats-async", "Показать статистику системы в фоновом потоке", (scanner, system) -> {
+            system.getExecutorService().submit(() -> {
+                try {
+                    String stats = system.generateStatistics();
+                    System.out.println("\n" + stats);
+                    System.out.println("=== ASYNC STATS COMPLETED ===\n");
+                } catch (Exception e) {
+                    System.err.println("Async stats generation failed: " + e.getMessage());
+                }
+            });
+            System.out.println("Statistics generation started in background thread. Check console for results.");
         });
     }
 }

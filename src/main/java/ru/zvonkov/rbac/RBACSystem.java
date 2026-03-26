@@ -4,6 +4,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class RBACSystem {
     private final UserManager userManager;
@@ -11,16 +16,27 @@ public class RBACSystem {
     private final AssignmentManager assignmentManager;
     private String currentUser;
 
+    // Пул потоков для асинхронных операций
+    private final ExecutorService executorService = Executors.newFixedThreadPool(4);
+
+    // Планировщик для периодических задач
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+
+    // Асинхронный лог
+    private final AsyncAuditLog auditLog = new AsyncAuditLog();
+
     public RBACSystem() {
         this.userManager = new UserManager();
         this.roleManager = new RoleManager();
         this.assignmentManager = new AssignmentManager(userManager, roleManager);
         this.currentUser = "system";
+
+        // Запуск периодической задачи для очистки истёкших назначений
+        // Задача запускается каждые 10 секунд
+        scheduler.scheduleAtFixedRate(this::cleanupExpiredAssignments, 10, 10, TimeUnit.SECONDS);
     }
 
-    private final AuditLog auditLog = new AuditLog();
-
-    public AuditLog getAuditLog() {
+    public AsyncAuditLog getAuditLog() {
         return auditLog;
     }
 
@@ -29,6 +45,10 @@ public class RBACSystem {
     public AssignmentManager getAssignmentManager() { return assignmentManager; }
     public String getCurrentUser() { return currentUser; }
     public void setCurrentUser(String currentUser) { this.currentUser = currentUser; }
+
+    public ExecutorService getExecutorService() {
+        return executorService;
+    }
 
     public void initialize() {
         Permission readUsers = new Permission("READ", "users", "Read user data");
@@ -127,5 +147,70 @@ public class RBACSystem {
         sb.append("================================\n");
 
         return sb.toString();
+    }
+
+    /**
+     * Периодическая задача: поиск и обработка истёкших временных назначений
+     */
+    private void cleanupExpiredAssignments() {
+        // Получаем все назначения (без блокировки основной структуры)
+        List<RoleAssignment> allAssignments = assignmentManager.findAll();
+
+        // Фильтруем только временные истёкшие назначения
+        List<RoleAssignment> expiredTemporaries = allAssignments.stream()
+                .filter(a -> a instanceof TemporaryAssignment)
+                .filter(a -> ((TemporaryAssignment) a).isExpired() && a.isActive())
+                .collect(Collectors.toList());
+
+        int expiredCount = expiredTemporaries.size();
+
+        if (expiredCount > 0) {
+            // Логируем факт обнаружения истёкших назначений
+            auditLog.log("expired-assignments-found", "system", "system",
+                    String.format("Found %d expired temporary assignments", expiredCount));
+        }
+
+        // Логируем текущую статистику (минимальная блокировка)
+        auditLog.log("system-stats", "system", "system",
+                String.format("Users: %d, Roles: %d, Assignments: %d (active: %d, expired: %d)",
+                        userManager.count(),
+                        roleManager.count(),
+                        assignmentManager.count(),
+                        assignmentManager.getActiveAssignments().size(),
+                        assignmentManager.getExpiredAssignments().size()));
+    }
+
+    /**
+     * Корректное завершение системы (остановка пулов потоков)
+     */
+    public void shutdown() {
+        // Остановка планировщика
+        scheduler.shutdown();
+        try {
+            if (!scheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+                scheduler.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            scheduler.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
+
+        // Остановка пула потоков
+        executorService.shutdown();
+        try {
+            if (!executorService.awaitTermination(5, TimeUnit.SECONDS)) {
+                executorService.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            executorService.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
+
+        // Завершение асинхронного логгера
+        try {
+            auditLog.shutdown();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 }
