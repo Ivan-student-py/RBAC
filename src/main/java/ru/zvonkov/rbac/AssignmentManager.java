@@ -23,7 +23,6 @@ public class AssignmentManager implements Repository<RoleAssignment> {
             throw new IllegalArgumentException("Assignment must not be null");
         }
 
-        // Проверка существования пользователя и роли (безопасно — менеджеры потокобезопасны)
         if (!userManager.exists(assignment.user().username())) {
             throw new IllegalArgumentException("User does not exist: " + assignment.user().username());
         }
@@ -32,7 +31,6 @@ public class AssignmentManager implements Repository<RoleAssignment> {
             throw new IllegalArgumentException("Role does not exist: " + assignment.role().name());
         }
 
-        // Критическая секция: проверка дубликатов + вставка должна быть атомарной
         synchronized (this) {
             boolean duplicateActive = assignments.values().stream()
                     .anyMatch(a -> a.isActive() &&
@@ -63,7 +61,6 @@ public class AssignmentManager implements Repository<RoleAssignment> {
 
     @Override
     public List<RoleAssignment> findAll() {
-        // Возвращаем копию для защиты от внешних модификаций
         return new ArrayList<>(assignments.values());
     }
 
@@ -74,7 +71,6 @@ public class AssignmentManager implements Repository<RoleAssignment> {
 
     @Override
     public void clear() {
-        // Атомарная очистка
         synchronized (this) {
             assignments.clear();
         }
@@ -82,7 +78,6 @@ public class AssignmentManager implements Repository<RoleAssignment> {
 
     public List<RoleAssignment> findByUser(User user) {
         if (user == null) return Collections.emptyList();
-        // Чтение из ConcurrentHashMap безопасно без синхронизации
         return assignments.values().stream()
                 .filter(a -> a.user().username().equals(user.username()))
                 .collect(Collectors.toList());
@@ -98,6 +93,14 @@ public class AssignmentManager implements Repository<RoleAssignment> {
     public List<RoleAssignment> findByFilter(AssignmentFilter filter) {
         if (filter == null) return findAll();
         return assignments.values().stream()
+                .filter(filter::test)
+                .collect(Collectors.toList());
+    }
+
+    public List<RoleAssignment> findByFilterParallel(AssignmentFilter filter) {
+        if (filter == null) return findAll();
+        // Параллельная фильтрация
+        return assignments.values().parallelStream()
                 .filter(filter::test)
                 .collect(Collectors.toList());
     }
@@ -139,7 +142,6 @@ public class AssignmentManager implements Repository<RoleAssignment> {
 
     public Set<Permission> getUserPermissions(User user) {
         if (user == null) return Collections.emptySet();
-        // Собираем права из всех активных назначений пользователя
         return assignments.values().stream()
                 .filter(a -> a.isActive() && a.user().username().equals(user.username()))
                 .flatMap(a -> a.role().getPermissions().stream())
@@ -153,7 +155,6 @@ public class AssignmentManager implements Repository<RoleAssignment> {
             throw new IllegalArgumentException("Assignment not found: " + assignmentId);
         }
         if (assignment instanceof PermanentAssignment) {
-            // Изменение состояния назначения — не требует синхронизации мапы
             ((PermanentAssignment) assignment).revoke();
         } else {
             throw new IllegalArgumentException("Only permanent assignments can be revoked directly");
@@ -168,7 +169,6 @@ public class AssignmentManager implements Repository<RoleAssignment> {
             throw new IllegalArgumentException("Assignment not found: " + assignmentId);
         }
         if (assignment instanceof TemporaryAssignment) {
-            // Изменение состояния временного назначения
             ((TemporaryAssignment) assignment).extendMinutesUntil(newExpirationDate.trim());
         } else {
             throw new IllegalArgumentException("Only temporary assignments can be extended");

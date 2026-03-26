@@ -14,7 +14,6 @@ public class RoleManager implements Repository<Role> {
             throw new IllegalArgumentException("Role must not be null");
         }
 
-        // Атомарная операция с двумя мапами — нужна синхронизация
         synchronized (this) {
             if (rolesById.containsKey(role.id())) {
                 throw new IllegalArgumentException("Role with ID '" + role.id() + "' already exists");
@@ -31,7 +30,6 @@ public class RoleManager implements Repository<Role> {
     public boolean remove(Role role) {
         if (role == null) return false;
 
-        // Атомарное удаление из обеих мап
         synchronized (this) {
             Role removedById = rolesById.remove(role.id());
             Role removedByName = rolesByName.remove(role.name());
@@ -49,7 +47,6 @@ public class RoleManager implements Repository<Role> {
 
     @Override
     public List<Role> findAll() {
-        // Возвращаем копию для защиты от внешних модификаций
         return new ArrayList<>(rolesById.values());
     }
 
@@ -60,7 +57,6 @@ public class RoleManager implements Repository<Role> {
 
     @Override
     public void clear() {
-        // Атомарная очистка обеих мап
         synchronized (this) {
             rolesById.clear();
             rolesByName.clear();
@@ -78,8 +74,17 @@ public class RoleManager implements Repository<Role> {
         if (filter == null) {
             return findAll();
         }
-        // Чтение из ConcurrentHashMap безопасно без синхронизации
         return rolesById.values().stream()
+                .filter(filter::test)
+                .collect(Collectors.toList());
+    }
+
+    public List<Role> findByFilterParallel(RoleFilter filter) {
+        if (filter == null) {
+            return findAll();
+        }
+        // Параллельная фильтрация
+        return rolesById.values().parallelStream()
                 .filter(filter::test)
                 .collect(Collectors.toList());
     }
@@ -110,7 +115,6 @@ public class RoleManager implements Repository<Role> {
         if (role == null) {
             throw new IllegalArgumentException("Role with name '" + roleName + "' does not exist");
         }
-        // Изменение роли не требует синхронизации (объект уже в мапе)
         role.addPermission(permission);
     }
 

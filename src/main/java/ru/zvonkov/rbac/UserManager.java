@@ -12,7 +12,6 @@ public class UserManager implements Repository<User> {
         if (user == null) {
             throw new IllegalArgumentException("User must not be null");
         }
-        // Атомарная проверка + вставка
         if (users.putIfAbsent(user.username(), user) != null) {
             throw new IllegalArgumentException("User with username '" + user.username() + "' already exists");
         }
@@ -26,14 +25,11 @@ public class UserManager implements Repository<User> {
 
     @Override
     public Optional<User> findById(String id) {
-        // В текущей реализации поиск по ID не поддерживается
-        // (ключ мапы — username, а не id)
         return Optional.empty();
     }
 
     @Override
     public List<User> findAll() {
-        // ConcurrentHashMap.values() возвращает потокобезопасную коллекцию
         return new ArrayList<>(users.values());
     }
 
@@ -59,7 +55,6 @@ public class UserManager implements Repository<User> {
             return Optional.empty();
         }
         String cleanEmail = email.trim();
-        // Поиск по значению не атомарен, но безопасен для чтения
         return users.values().stream()
                 .filter(user -> cleanEmail.equals(user.email()))
                 .findFirst();
@@ -69,8 +64,17 @@ public class UserManager implements Repository<User> {
         if (filter == null) {
             return findAll();
         }
-        // Фильтрация безопасна для чтения
         return users.values().stream()
+                .filter(filter::test)
+                .collect(Collectors.toList());
+    }
+
+    public List<User> findByFilterParallel(UserFilter filter) {
+        if (filter == null) {
+            return findAll();
+        }
+        // Параллельная фильтрация
+        return users.values().parallelStream()
                 .filter(filter::test)
                 .collect(Collectors.toList());
     }
@@ -94,14 +98,10 @@ public class UserManager implements Repository<User> {
     public void update(String username, String newFullName, String newEmail) {
         ValidationUtils.requireNonEmpty(username, "Username");
         String cleanUsername = username.trim();
-
-        // Атомарное обновление с проверкой существования
-        User existingUser = users.get(cleanUsername);
-        if (existingUser == null) {
+        if (!users.containsKey(cleanUsername)) {
             throw new IllegalArgumentException("User with username '" + cleanUsername + "' does not exist");
         }
 
-        // Создаём новый объект (неизменяемый подход)
         User updatedUser = User.validate(cleanUsername, newFullName, newEmail);
         users.put(cleanUsername, updatedUser);
     }
