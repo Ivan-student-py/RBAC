@@ -1,20 +1,21 @@
 package ru.zvonkov.rbac;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class UserManager implements Repository<User> {
-    private final Map<String, User> users = new HashMap<>();
+    private final Map<String, User> users = new ConcurrentHashMap<>();
 
     @Override
     public void add(User user) {
         if (user == null) {
             throw new IllegalArgumentException("User must not be null");
         }
-        if (users.containsKey(user.username())) {
+        // Атомарная проверка + вставка
+        if (users.putIfAbsent(user.username(), user) != null) {
             throw new IllegalArgumentException("User with username '" + user.username() + "' already exists");
         }
-        users.put(user.username(), user);
     }
 
     @Override
@@ -25,11 +26,14 @@ public class UserManager implements Repository<User> {
 
     @Override
     public Optional<User> findById(String id) {
+        // В текущей реализации поиск по ID не поддерживается
+        // (ключ мапы — username, а не id)
         return Optional.empty();
     }
 
     @Override
     public List<User> findAll() {
+        // ConcurrentHashMap.values() возвращает потокобезопасную коллекцию
         return new ArrayList<>(users.values());
     }
 
@@ -55,6 +59,7 @@ public class UserManager implements Repository<User> {
             return Optional.empty();
         }
         String cleanEmail = email.trim();
+        // Поиск по значению не атомарен, но безопасен для чтения
         return users.values().stream()
                 .filter(user -> cleanEmail.equals(user.email()))
                 .findFirst();
@@ -64,6 +69,7 @@ public class UserManager implements Repository<User> {
         if (filter == null) {
             return findAll();
         }
+        // Фильтрация безопасна для чтения
         return users.values().stream()
                 .filter(filter::test)
                 .collect(Collectors.toList());
@@ -88,10 +94,14 @@ public class UserManager implements Repository<User> {
     public void update(String username, String newFullName, String newEmail) {
         ValidationUtils.requireNonEmpty(username, "Username");
         String cleanUsername = username.trim();
-        if (!users.containsKey(cleanUsername)) {
+
+        // Атомарное обновление с проверкой существования
+        User existingUser = users.get(cleanUsername);
+        if (existingUser == null) {
             throw new IllegalArgumentException("User with username '" + cleanUsername + "' does not exist");
         }
 
+        // Создаём новый объект (неизменяемый подход)
         User updatedUser = User.validate(cleanUsername, newFullName, newEmail);
         users.put(cleanUsername, updatedUser);
     }
