@@ -165,19 +165,37 @@ public class RBACSystem {
         int expiredCount = expiredTemporaries.size();
 
         if (expiredCount > 0) {
-            // Логируем факт обнаружения истёкших назначений
+            // Явно логируем каждое истёкшее назначение
+            for (RoleAssignment assignment : expiredTemporaries) {
+                String username = assignment.user().username();
+                String roleName = assignment.role().name();
+                String expiresAt = ((TemporaryAssignment) assignment).getExpiresAt();
+
+                auditLog.log("assignment-expired", "system", username,
+                        String.format("Temporary assignment expired: %s (was active until %s)",
+                                roleName, expiresAt));
+            }
+
+            // Логируем общую информацию
             auditLog.log("expired-assignments-found", "system", "system",
-                    String.format("Found %d expired temporary assignments", expiredCount));
+                    String.format("Found and marked %d expired temporary assignments as inactive",
+                            expiredCount));
         }
 
         // Логируем текущую статистику (минимальная блокировка)
+        int totalUsers = userManager.count();
+        int totalRoles = roleManager.count();
+        int totalAssignments = assignmentManager.count();
+        int activeAssignments = assignmentManager.getActiveAssignments().size();
+        int expiredAssignments = assignmentManager.getExpiredAssignments().size();
+
         auditLog.log("system-stats", "system", "system",
                 String.format("Users: %d, Roles: %d, Assignments: %d (active: %d, expired: %d)",
-                        userManager.count(),
-                        roleManager.count(),
-                        assignmentManager.count(),
-                        assignmentManager.getActiveAssignments().size(),
-                        assignmentManager.getExpiredAssignments().size()));
+                        totalUsers,
+                        totalRoles,
+                        totalAssignments,
+                        activeAssignments,
+                        expiredAssignments));
     }
 
     /**
